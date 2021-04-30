@@ -57,8 +57,6 @@ CREATE TABLE IF NOT EXISTS `car_rental`.`Saved_List` (
   `User_id` INT NOT NULL,
   `Car_VIN` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`User_id`, `Car_VIN`),
-  INDEX `fk_Car_has_User_User1_idx` (`User_id` ASC) VISIBLE,
-  INDEX `fk_Car_has_User_Car_idx` (`Car_VIN` ASC) VISIBLE,
   CONSTRAINT `fk_Car_has_User_Car`
     FOREIGN KEY (`Car_VIN`)
     REFERENCES `car_rental`.`Car` (`VIN`)
@@ -84,8 +82,6 @@ CREATE TABLE IF NOT EXISTS `car_rental`.`Rental` (
   `Price` DECIMAL(10,2) NOT NULL,
   `Return Date` DATETIME(3) NOT NULL,
   PRIMARY KEY (`Order_Number`),
-  INDEX `fk_Car_has_User_User2_idx` (`User_id` ASC) VISIBLE,
-  INDEX `fk_Car_has_User_Car1_idx` (`Car_VIN` ASC) VISIBLE,
   CONSTRAINT `fk_Car_has_User_Car1`
     FOREIGN KEY (`Car_VIN`)
     REFERENCES `car_rental`.`Car` (`VIN`)
