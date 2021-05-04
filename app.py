@@ -109,5 +109,46 @@ def login():
             cursor.close()
             conn.close()
 
+@app.route('/checkout',methods=['POST', 'GET'])
+def checkout():
+    if request.method == "GET":
+        return json.dumps({'message':'checkout.html'})
+        #return render_template("checkout.html")
+    connected_to_database = 0
+    try:
+        vin = request.form['vin']
+        days = request.form['days']
+        if not vin:
+            return json.dumps({'message':'missing vin'})
+        elif not days:
+            return json.dumps({'message':'missing days'})
+
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        connected_to_database == 1
+        query = (
+            "INSERT INTO rental (User_id, Car_VIN, Date, Rental_Days, Price, Return_Date) "
+            "VALUES "
+            "(%s, %s, NOW(3), %s, (SELECT price FROM car WHERE vin=%s)*%s, null);"
+        )
+        param = (session['user'], vin, days, vin, days)
+        cursor.execute(query, param)
+        conn.commit()
+        data = cursor.fetchall()
+
+        if len(data) == 0:
+            #conn.commit()
+            return json.dumps({'message':'rental confirmed'})
+        else:
+            return json.dumps({'message':'rental failed, is the vin number valid?'})
+
+    except Exception as e:
+        return json.dumps({'exception':e})
+
+    finally:
+        if connected_to_database == 1:
+            cursor.close()
+            conn.close()
+
 if __name__ == "__main__":
     app.run()   

@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `car_rental`.`Rental` (
   `Date` DATETIME(3) NOT NULL,
   `Rental_Days` INT NOT NULL,
   `Price` DECIMAL(10,2) NOT NULL,
-  `Return Date` DATETIME(3) NOT NULL,
+  `Return_Date` DATETIME(3),
   PRIMARY KEY (`Order_Number`),
   CONSTRAINT `fk_Car_has_User_Car1`
     FOREIGN KEY (`Car_VIN`)
