@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS `car_rental`.`Car` (
   `Color` VARCHAR(45) NULL,
   `Year` INT NULL,
   `Price` DECIMAL(10,2) NULL,
+  `Deleted` TINYINT(0) NOT NULL,
   PRIMARY KEY (`VIN`))
 ENGINE = InnoDB;
 

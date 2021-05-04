@@ -1,9 +1,9 @@
-insert into car (VIN, Make, Model, Color, Year, Price)
+insert into car (VIN, Make, Model, Color, Year, Price, Deleted)
 values
-("3GYFNDE36FS558646", "Cadillac", "SRX", "Canyon Ridge Mettalic", 2015, 1199.99),
-("5N1AT2MV3JC712916", "Nissan", "Rogue", "Canyon Ridge Mettalic", 2018, 1299.99),
-("KNDJP3A54H7878187", "KIA", "Soul", "Canyon Ridge Mettalic", 2017, 799.99),
-("1FM5K7F82HGA20352", "Ford", "Explorer", "Canyon Ridge Mettalic", 2017, 999.99);
+("3GYFNDE36FS558646", "Cadillac", "SRX", "Canyon Ridge Mettalic", 2015, 1199.99, 0),
+("5N1AT2MV3JC712916", "Nissan", "Rogue", "Canyon Ridge Mettalic", 2018, 1299.99, 0),
+("KNDJP3A54H7878187", "KIA", "Soul", "Canyon Ridge Mettalic", 2017, 799.99, 0),
+("1FM5K7F82HGA20352", "Ford", "Explorer", "Canyon Ridge Mettalic", 2017, 999.99, 0);
 
 insert into image (image_Number, Car_VIN)
 values
