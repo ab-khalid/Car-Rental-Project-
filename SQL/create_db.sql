@@ -19,8 +19,8 @@ USE `car_rental` ;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `car_rental`.`Admin` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `username` VARCHAR(45) NULL,
-  `hashed_password` TEXT(128) NULL,
+  `username` VARCHAR(45) NOT NULL,
+  `hashed_password` TEXT(128) NOT NULL,
   PRIMARY KEY (`id`))
 ENGINE = InnoDB;
 
@@ -30,8 +30,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `car_rental`.`User` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `username` VARCHAR(45) NULL,
-  `hashed_password` TEXT(128) NULL,
+  `username` VARCHAR(45) NOT NULL,
+  `hashed_password` TEXT(128) NOT NULL,
   PRIMARY KEY (`id`))
 ENGINE = InnoDB;
 
@@ -41,12 +41,12 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `car_rental`.`Car` (
   `VIN` VARCHAR(45) NOT NULL,
-  `Make` VARCHAR(45) NULL,
-  `Model` VARCHAR(45) NULL,
-  `Color` VARCHAR(45) NULL,
-  `Year` INT NULL,
-  `Seats` INT NULL,
-  `Price_Per_Day` DECIMAL(10,2) NULL,
+  `Make` VARCHAR(45) NOT NULL,
+  `Model` VARCHAR(45) NOT NULL,
+  `Color` VARCHAR(45) NOT NULL,
+  `Year` INT NOT NULL,
+  `Seats` INT NOT NULL,
+  `Price_Per_Day` DECIMAL(10,2) NOT NULL,
   `Deleted` TINYINT(0) NOT NULL,
   PRIMARY KEY (`VIN`))
 ENGINE = InnoDB;
