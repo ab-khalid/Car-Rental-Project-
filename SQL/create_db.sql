@@ -45,7 +45,8 @@ CREATE TABLE IF NOT EXISTS `car_rental`.`Car` (
   `Model` VARCHAR(45) NULL,
   `Color` VARCHAR(45) NULL,
   `Year` INT NULL,
-  `Price` DECIMAL(10,2) NULL,
+  `Seats` INT NULL,
+  `Price_Per_Day` DECIMAL(10,2) NULL,
   `Deleted` TINYINT(0) NOT NULL,
   PRIMARY KEY (`VIN`))
 ENGINE = InnoDB;
@@ -57,6 +58,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `car_rental`.`Saved_List` (
   `User_id` INT NOT NULL,
   `Car_VIN` VARCHAR(45) NOT NULL,
+  `Days` INT NOT NULL,
   PRIMARY KEY (`User_id`, `Car_VIN`),
   CONSTRAINT `fk_Car_has_User_Car`
     FOREIGN KEY (`Car_VIN`)
@@ -79,8 +81,8 @@ CREATE TABLE IF NOT EXISTS `car_rental`.`Rental` (
   `User_id` INT NOT NULL,
   `Car_VIN` VARCHAR(45) NOT NULL,
   `Date` DATETIME(3) NOT NULL,
-  `Rental_Days` INT NOT NULL,
-  `Price` DECIMAL(10,2) NOT NULL,
+  `Days` INT NOT NULL,
+  `Total_Price` DECIMAL(10,2) NOT NULL,
   `Return_Date` DATETIME(3),
   PRIMARY KEY (`Order_Number`),
   CONSTRAINT `fk_Car_has_User_Car1`
