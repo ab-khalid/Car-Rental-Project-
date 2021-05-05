@@ -16,7 +16,7 @@ app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'root'
 app.config['MYSQL_DATABASE_DB'] = 'car_rental'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
-app.config['MYSQL_DATABASE_PORT'] = 3307 
+app.config['MYSQL_DATABASE_PORT'] = 3306 
 mysql.init_app(app)
 
 app.secret_key = 'secret key can be anything!'
