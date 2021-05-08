@@ -1,0 +1,47 @@
+{% extends "admin.html" %}
+
+{% block title %}
+    Admin Add
+{% endblock %}
+
+{% block main %}
+
+<form class="form-horizontal" method="POST" action="admin/add">
+    <label class="btn btn-primary" for="btncheck1">Add Car + </label>
+</form>
+
+    <form class="form-horizontal" method="POST" action="/admin/add">
+        <h1>Edit Car</h1>
+        {% for image in images %}
+            <img src="/static/images/{{image[0]}}.jpg" height="150px" width="250px" alt={{image[0]}}>
+        {% endfor %}
+
+        <label for="fvin">VIN:</label><br>
+        <input type="text" id="fvin" name="fvin"><br>
+
+        <label for="fmake">Make:</label><br>
+        <input type="text" id="fmake" name="fmake"><br>
+
+        <label for="fmodel">Model:</label><br>
+        <input type="text" id="fmodel" name="fmodel"><br>
+
+        <label for="fcolor">Color:</label><br>
+        <input type="text" id="fcolor" name="fcolor"><br>
+
+        <label for="fyear">Year:</label><br>
+        <input type="text" id="fyear" name="fyear"><br>
+
+        <label for="fseats">Seats:</label><br>
+        <input type="text" id="fseats" name="fseats"><br>
+
+        <label for="fprice">Price in Dollars:</label><br>
+        <input type="text" id="fprice" name="fprice"><br>
+        <!-- Update Button-->
+        <div class="form-group">
+            <label class="col-md-4 control-label" for="singlebutton"></label>
+            <div class="col-md-4">
+                <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="submit" value="Update" />
+            </div>
+        </div>
+    </form>
+    {% endblock %}

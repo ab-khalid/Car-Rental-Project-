@@ -1,0 +1,38 @@
+{% extends "admin.html" %}
+
+{% block title %}
+    Admin Cars
+{% endblock %}
+{% block main %}
+    <table class="table table-hover">
+        <thead>
+        <tr> 
+            <th scope="col">Car</th>
+            <th scope="col">VIN</th>
+            <th scope="col">Make</th>
+            <th scope="col">Model</th>
+            <th scope="col">Color</th>
+            <th scope="col">Year</th>
+            <th scope="col">Seats</th>
+            <th scope="col">Price Per Day</th>
+            <th scope="col">Edit / Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for car in data %}
+            <tr>
+                <td><img src="/static/images/{{car[7]}}.jpg" height="150px" width="250px" alt={{car[7]}}> </td> 
+                <td>{{car[0]}}</td> 
+                <td>{{car[1]}}</td>
+                <td>{{car[2]}}</td>
+                <td>{{car[3]}}</td>
+                <td>{{car[4]}}</td>
+                <td>{{car[5]}}</td>
+                <td>{{car[6]}}</td>
+                <td style="margin: 20px; padding-left: 30px;"><pre> <a href="/edit/{{car[0]}}" id="edit_button" class="edit_button"><i class="far fa-edit"></a></i> <a href="/delete/{{car[0]}}" id="trash_button" class="trash_button"><i class="fas fa-trash-alt"></i></a>  </pre></td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endblock %}

@@ -1,0 +1,25 @@
+{% extends "admin.html" %}
+
+{% block title %}
+    Admin Delete
+{% endblock %}
+
+{% block main %}
+    <form class="form-horizontal" method="POST" action="/delete/{{vin}}">
+        <h1>Are you sure you want to delete the following car ?</h1>
+        {% for image in images %}
+            <img src="/static/images/{{image[0]}}.jpg" height="150px" width="250px" alt={{image[0]}}>
+        {% endfor %}
+        <h5>Car VIN: {{vin}}</h5>
+        <h5>Car Make: {{car[0]}}</h5>
+        <h5>Car Model: {{car[1]}}</h5>
+        <h5>Car Color: {{car[2]}}</h5>
+        <h5>Car Year: {{car[3]}}</h5>
+        <h5>Car Seats: {{car[4]}}</h5>
+        <h5>Car Price Per Day: ${{car[5]}}</h5>
+        <!--No-->
+        <button type="submit" class="btn btn-danger" name="toDelete" value="noDelete">No</button>
+        <!--Yes-->
+        <button type="submit" class="btn btn-primary" name="toDelete" value="yesDelete">Yes</button>
+    </form>
+    {% endblock %}
