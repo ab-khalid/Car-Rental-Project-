@@ -719,6 +719,14 @@ def checkout():
             conn = mysql.connect()
             cursor = conn.cursor()
             connected_to_database == 1
+            #remove from saved list
+            query = (
+                "DELETE FROM saved_list WHERE user_id = %s AND car_vin = %s; "
+            )
+            param = (session['user'], vin)
+            cursor.execute(query, param)
+
+            #checkout
             query = (
                 "INSERT INTO rental (User_id, Car_VIN, Date, Days, Total_Price, Return_Date) "
                 "VALUES "
@@ -726,11 +734,12 @@ def checkout():
             )
             param = (session['user'], vin, days, vin, days)
             cursor.execute(query, param)
+            
             data = cursor.fetchall()
 
             if len(data) == 0:
                 conn.commit()
-                return json.dumps({'message':'rental confirmed'})
+                return redirect("/showHistory")
             else:
                 return json.dumps({'message':'rental failed, is the vin number valid?'})
 
@@ -745,6 +754,45 @@ def checkout():
         return redirect("/login")
 
 
+@app.route('/showHistory', methods=['GET'])
+def showHistory():
+    if session.get('user'):
+        user = session.get('user')
+        connected_to_database = 0
+        try:
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            connected_to_database == 1
+            # get car checkout history
+            query = (
+                "SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number, rental.Days, "
+                "rental.Order_number, rental.date, rental.total_price "
+                "FROM car, image, rental "
+                "WHERE car.VIN = image.CAR_VIN "
+                "   AND car.VIN = rental.Car_VIN "
+                "   AND rental.User_id = %s "
+                "GROUP BY car.VIN;"
+            )
+            param = (session['user'])
+            cursor.execute(query, param)
+            data = cursor.fetchall()
+
+            # get username
+            query = "SELECT user.username FROM user WHERE id = %s ;"
+            param = (session['user'])
+            cursor.execute(query, param)
+            username = cursor.fetchall()
+
+            return render_template("history.html", data=data, user=username[0][0])
+        except Exception as e:
+            print("exception:", str(e))
+            return render_template('index.html')
+        finally:
+            if connected_to_database == 1:
+                cursor.close()
+                conn.close()
+    else:
+        return redirect("/login")
     
 @app.route('/showSavedList', methods=['GET'])
 def showSavedlist():
@@ -755,7 +803,7 @@ def showSavedlist():
             conn = mysql.connect()
             cursor = conn.cursor()
             connected_to_database == 1
-            # join car table with images on VIN number
+            # get car saved list
             query = (
                 "SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number, saved_list.Days "
                 "FROM car, image, saved_list "
@@ -767,14 +815,8 @@ def showSavedlist():
             param = (session['user'])
             cursor.execute(query, param)
             data = cursor.fetchall()
-            cursor.close()
-            conn.close()
-            connected_to_database == 0
 
-            #getting colors for catagories
-            conn = mysql.connect()
-            cursor = conn.cursor()
-            connected_to_database == 1
+            # get username
             query = "SELECT user.username FROM user WHERE id = %s ;"
             param = (session['user'])
             cursor.execute(query, param)

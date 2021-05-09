@@ -48,7 +48,7 @@
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav navbar-left">
                         <li><a href="/">Home</a></li>
-                        <li><a href="/showHistory">Checkout History</a></li>
+                        <li><a href="/showSavedList">Saved List</a></li>
                         <li><a href="/logout">Logout</a></li>
                     </ul>
                 </div>
@@ -58,7 +58,7 @@
         </nav>
     </header>
 
-    <h2 class="text-center">{{user}}'s saved list</h2>
+    <h2 class="text-center">{{user}}'s checkout history</h2>
     <div class=container>
         <table class="table table-hover">
             <tbody>
@@ -87,40 +87,22 @@
                             <li>{{car[6]}}</li>
                         </ul>
                     </td>
+
                     <td>
-                        <div class="d-flex flex-column">
-                            <div class="p-2">
-                                <form action="/savedListUpdate" method="POST">
-                                    <!-- Forms only allow GET and POST -->
-                                    <input class="hidden" type="text" name="vin" id="vin" value="{{car[0]}}">
-                                    <div class="form">
-                                        <label class="text-nowrap">Number of days</label>
-                                        <input class="form-control" style="width: 80px" type="number" name="days"
-                                            id="days" value="{{car[8]}}">
-                                        <button class="btn btn-secondary .btn-block my-2 my-sm-0"
-                                            style="width: 80px; margin-top: 10px;" type="submit">Update</button>
-                                    </div>
-                                </form>
-                            </div>
+                        <ul style="list-style-type: none; text-align: right; font-weight: bold">
+                            <li>Order Number</li>
+                            <li>Order Date</li>
+                            <li>Number of Days</li>
+                            <li>Total Cost</li>
+                        </ul>
                     </td>
                     <td>
-                        <div class="p-2">
-                            <label class=""> </label>
-                            <form action="/checkout" method="POST">
-                                <input class="hidden" type="text" name="vin" id="vin" value="{{car[0]}}">
-                                <input class="hidden" type="text" name="days" id="days" value="{{car[8]}}">
-                                <button class="btn btn-secondary .btn-block my-2 my-sm-0"
-                                    style="width: 80px; margin-top: 10px;" type="submit">Checkout</button>
-                            </form>
-                        </div>
-                        <div class="p-2">
-                            <form action="/savedListDelete" method="POST">
-                                <!-- Forms only allow GET and POST -->
-                                <input class="hidden" type="text" name="vin" id="vin" value="{{car[0]}}">
-                                <button class="btn btn-secondary .btn-block my-2 my-sm-0"
-                                    style="width: 80px; margin-top: 10px;" type="submit">Remove</button>
-                            </form>
-                        </div>
+                        <ul style="list-style-type: none; text-align: left;">
+                            <li>{{car[9]}}</li>
+                            <li>{{car[10]}}</li>
+                            <li>{{car[8]}}</li>
+                            <li>{{car[11]}}</li>
+                        </ul>
                     </td>
                 </tr>
                 {% endfor %}
