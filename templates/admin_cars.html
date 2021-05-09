@@ -4,6 +4,7 @@
     Admin Cars
 {% endblock %}
 {% block main %}
+    <link rel ="stylesheet" href="/static/styles.css">
     <form class="d-flex" action="/admin/cars" method="POST">
         <input class="form-control me-sm-2" type="text" name ="search" id="search" placeholder="Search">
         <br>
@@ -30,6 +31,12 @@
         <br>
     </form>
     <br>
+    {{ pagination.info }}
+    <nav >
+        <ul class="pagination-page-info">
+            {{ pagination.links }}
+        </ul>
+    </nav>
     <table class="table table-hover">
         <thead>
         <tr> 
@@ -46,7 +53,7 @@
         </thead>
         <tbody>
             {% for car in data %}
-            <tr>
+            <tr  class="strikeout">
                 <td><img src="/static/images/{{car[7]}}.jpg" height="150px" width="250px" alt={{car[7]}}> </td> 
                 <td>{{car[0]}}</td> 
                 <td>{{car[1]}}</td>
