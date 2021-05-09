@@ -719,6 +719,13 @@ def checkout():
             conn = mysql.connect()
             cursor = conn.cursor()
             connected_to_database == 1
+
+            out_already = cursor.execute(
+                "SELECT rental.car_vin FROM rental "
+                "WHERE rental.car_vin = %s and rental.return_date IS NULL;", (vin))
+            if out_already:
+                return json.dumps({'message':'Car unavailable.'})
+
             #remove from saved list
             query = (
                 "DELETE FROM saved_list WHERE user_id = %s AND car_vin = %s; "
