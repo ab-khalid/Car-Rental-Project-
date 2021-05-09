@@ -43,6 +43,7 @@
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav navbar-left">
                         <li><a href="/">Home</a></li>
+                        <li><a href="/showSavedList">SavedList</a></li>
                         <li><a href="login">Login</a></li>
                         <li><a href="register">Sign Up</a></li>
                         <li><a href="/logout">Logout</a></li>
@@ -90,6 +91,7 @@
             <th scope="col">Year</th>
             <th scope="col">Seats</th>
             <th scope="col">Price Per Day</th>
+            <th scope="col">Save</th>
         </tr>
         </thead>
         <tbody>
@@ -103,6 +105,12 @@
                 <td>{{car[4]}}</td>
                 <td>{{car[5]}}</td>
                 <td>{{car[6]}}</td>
+                <td><form action="/savedList" method="POST">
+                    <input class="hidden" type="text" name="vin" id="vin" value="{{car[0]}}">
+                    <input class="hidden" type="text" name="days" id="days" value="{{car[8]}}">
+                    <button class="btn btn-secondary .btn-block my-2 my-sm-0"
+                        style="width: 100px; margin-top: 10px;" type="submit">Add to List</button>
+                </form></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -110,3 +118,5 @@
 </body>
 
 </html>
+
+

@@ -777,7 +777,7 @@ def savedList():
                 if not vin:
                     return json.dumps({'message':'missing vin'})
                 elif not days:
-                    return json.dumps({'message':'missing days'})
+                    days=1
 
                 conn = mysql.connect()
                 cursor = conn.cursor()
