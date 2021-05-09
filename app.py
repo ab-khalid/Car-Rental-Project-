@@ -70,7 +70,7 @@ def index():
             cursor = conn.cursor()
             connected_to_database == 1
             # join car table with images on VIN number
-            cursor.execute("SELECT Color FROM car")
+            cursor.execute("SELECT DISTINCT Color FROM car")
             colors = cursor.fetchall()
 
             return render_template("index.html", data=data, colors=colors)
@@ -103,7 +103,7 @@ def index():
                     cursor = conn.cursor()
                     connected_to_database == 1
                     # join car table with images on VIN number
-                    cursor.execute("SELECT Color FROM car")
+                    cursor.execute("SELECT DISTINCT Color FROM car")
                     colors = cursor.fetchall()
                     cursor.close()
                     conn.close()
@@ -138,7 +138,7 @@ def index():
                     cursor = conn.cursor()
                     connected_to_database == 1
                     # join car table with images on VIN number
-                    cursor.execute("SELECT Color FROM car")
+                    cursor.execute("SELECT DISTINCT Color FROM car")
                     colors = cursor.fetchall()
                     cursor.close()
                     conn.close()
@@ -166,10 +166,37 @@ def index():
                     if connected_to_database == 1:
                         cursor.close()
                         conn.close()
-        else:
-            isFound = False
-            print("Item not found")
-            redirect('/')
+        else: #no inquiry given
+            if cars_color:#but color is given
+                try:
+
+                    #getting colors for catagories
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    # join car table with images on VIN number
+                    cursor.execute("SELECT DISTINCT Color FROM car")
+                    colors = cursor.fetchall()
+                    cursor.close()
+                    conn.close()
+                    connected_to_database == 0
+
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    
+                    cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                    JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN", (cars_color))
+
+                    data = cursor.fetchall()
+                    return render_template("index.html", data=data, colors=colors)
+                except Exception as e:
+                    print("exception:", str(e))
+                    return render_template('index.html')
+                finally:
+                    if connected_to_database == 1:
+                        cursor.close()
+                        conn.close()
     return render_template('index.html')
 
 def allowed_file(filename):
@@ -681,7 +708,7 @@ def signUp():
         conn.commit()
         #return json.dumps({'message':'User created successfully !'})
         print("User created successfully")
-        return render_template("index.html")
+        return redirect("/login") #redirect instead of render_template
     else:
         print("User not created")
         return render_template("register.html")
@@ -713,7 +740,7 @@ def login():
         if len(data) > 0 and check_password_hash(data[0][2], password):
             session['user'] = data[0][0]
             print("User signed in! ")
-            return render_template('index.html')
+            return redirect('/showSavedList') #redirect instead of render template
         else:
             print("Username or password are wrong")
             return render_template('login.html')
@@ -784,57 +811,10 @@ def admin_login():
 
 @app.route('/checkout',methods=['POST', 'GET'])
 def checkout():
-    if request.method == "GET":
-        return json.dumps({'message':'checkout.html'})
-        #return render_template("checkout.html")
-    connected_to_database = 0
-    try:
-        vin = request.form['vin']
-        days = request.form['days']
-        if not vin:
-            return json.dumps({'message':'missing vin'})
-        elif not days:
-            return json.dumps({'message':'missing days'})
-
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        connected_to_database == 1
-        query = (
-            "INSERT INTO rental (User_id, Car_VIN, Date, Days, Total_Price, Return_Date) "
-            "VALUES "
-            "(%s, %s, NOW(3), %s, (SELECT Price_Per_Day FROM car WHERE vin=%s)*%s, null);"
-        )
-        param = (session['user'], vin, days, vin, days)
-        cursor.execute(query, param)
-        data = cursor.fetchall()
-
-        if len(data) == 0:
-            conn.commit()
-            return json.dumps({'message':'rental confirmed'})
-        else:
-            return json.dumps({'message':'rental failed, is the vin number valid?'})
-
-    except Exception as e:
-        return json.dumps({'exception':e})
-
-    finally:
-        if connected_to_database == 1:
-            cursor.close()
-            conn.close()
-
-
-@app.route('/showSavedList',methods=['GET'])
-def savedlist():
     if session.get('user'):
-        return json.dumps({'message':'savedlist.html'})
-    else:
-        return render_template('error.html', error = 'Unauthorized Access')
-    
-    
-@app.route('/savedList',methods=['POST', 'GET', 'PUT', 'DELETE'])
-def savedList():
-    #create
-    if request.method == "POST":
+        if request.method == "GET":
+            return json.dumps({'message':'checkout.html'})
+            #return render_template("checkout.html")
         connected_to_database = 0
         try:
             vin = request.form['vin']
@@ -847,20 +827,36 @@ def savedList():
             conn = mysql.connect()
             cursor = conn.cursor()
             connected_to_database == 1
+
+            out_already = cursor.execute(
+                "SELECT rental.car_vin FROM rental "
+                "WHERE rental.car_vin = %s and rental.return_date IS NULL;", (vin))
+            if out_already:
+                return json.dumps({'message':'Car unavailable.'})
+
+            #remove from saved list
             query = (
-                "INSERT INTO saved_list (User_id, Car_VIN, Days) "
-                "VALUES "
-                "(%s, %s, %s);"
+                "DELETE FROM saved_list WHERE user_id = %s AND car_vin = %s; "
             )
-            param = (session['user'], vin, days)
+            param = (session['user'], vin)
             cursor.execute(query, param)
+
+            #checkout
+            query = (
+                "INSERT INTO rental (User_id, Car_VIN, Date, Days, Total_Price, Return_Date) "
+                "VALUES "
+                "(%s, %s, NOW(3), %s, (SELECT Price_Per_Day FROM car WHERE vin=%s)*%s, null);"
+            )
+            param = (session['user'], vin, days, vin, days)
+            cursor.execute(query, param)
+            
             data = cursor.fetchall()
 
             if len(data) == 0:
                 conn.commit()
-                return json.dumps({'message':'add to saved list confirmed'})
+                return redirect("/showHistory")
             else:
-                return json.dumps({'message':'add to saved list failed'})
+                return json.dumps({'message':'rental failed, is the vin number valid?'})
 
         except Exception as e:
             return json.dumps({'exception':e})
@@ -869,39 +865,170 @@ def savedList():
             if connected_to_database == 1:
                 cursor.close()
                 conn.close()
+    else:
+        return redirect("/login")
 
-    #read
-    elif request.method == "GET":
+
+@app.route('/showHistory', methods=['GET'])
+def showHistory():
+    if session.get('user'):
+        user = session.get('user')
         connected_to_database = 0
         try:
             conn = mysql.connect()
             cursor = conn.cursor()
             connected_to_database == 1
+            # get car checkout history
             query = (
-                "SELECT vin, Make, Model, Color, Year, Seats, CAST(Price_Per_Day AS CHAR) AS Price_Per_Day, Image_number, Days "
-                "FROM car, image, saved_list "
-                "WHERE car.vin = image.car_vin AND car.vin = saved_list.car_vin AND saved_list.user_id = %s AND car.deleted = 0; "
+                "SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number, rental.Days, "
+                "rental.Order_number, rental.date, rental.total_price "
+                "FROM car, image, rental "
+                "WHERE car.VIN = image.CAR_VIN "
+                "   AND car.VIN = rental.Car_VIN "
+                "   AND rental.User_id = %s "
+                "GROUP BY car.VIN;"
             )
             param = (session['user'])
             cursor.execute(query, param)
-            
             data = cursor.fetchall()
 
-            if len(data) > 0:
-                return json.dumps(data)
-            else:
-                return json.dumps({'message':'no cars available'})
+            # get username
+            query = "SELECT user.username FROM user WHERE id = %s ;"
+            param = (session['user'])
+            cursor.execute(query, param)
+            username = cursor.fetchall()
 
+            return render_template("history.html", data=data, user=username[0][0])
         except Exception as e:
-            return json.dumps({'exception':e})
-
+            print("exception:", str(e))
+            return render_template('index.html')
         finally:
             if connected_to_database == 1:
                 cursor.close()
                 conn.close()
+    else:
+        return redirect("/login")
+    
+@app.route('/showSavedList', methods=['GET'])
+def showSavedlist():
+    if session.get('user'):
+        user = session.get('user')
+        connected_to_database = 0
+        try:
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            connected_to_database == 1
+            # get car saved list
+            query = (
+                "SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number, saved_list.Days "
+                "FROM car, image, saved_list "
+                "WHERE car.VIN = image.CAR_VIN "
+                "   AND car.VIN = saved_list.Car_VIN "
+                "   AND saved_list.User_id = %s "
+                "GROUP BY car.VIN;"
+            )
+            param = (session['user'])
+            cursor.execute(query, param)
+            data = cursor.fetchall()
 
-    #update
-    elif request.method == "PUT":
+            # get username
+            query = "SELECT user.username FROM user WHERE id = %s ;"
+            param = (session['user'])
+            cursor.execute(query, param)
+            username = cursor.fetchall()
+
+            return render_template("savedList.html", data=data, user=username[0][0])
+        except Exception as e:
+            print("exception:", str(e))
+            return render_template('index.html')
+        finally:
+            if connected_to_database == 1:
+                cursor.close()
+                conn.close()
+    else:
+        return redirect("/login")
+
+
+@app.route('/savedList',methods=['POST', 'GET'])
+def savedList():
+    if session.get('user'):
+        #create
+        if request.method == "POST":
+            connected_to_database = 0
+            try:
+                vin = request.form['vin']
+                days = request.form['days']
+                if not vin:
+                    return json.dumps({'message':'missing vin'})
+                elif not days:
+                    days=1
+
+                conn = mysql.connect()
+                cursor = conn.cursor()
+                connected_to_database == 1
+                saved_already = cursor.execute("SELECT car_vin FROM saved_list WHERE user_id = %s AND car_vin = %s", (session['user'], vin))
+                if saved_already:
+                    print('car already saved')
+                    return ('', 204)
+                query = (
+                    "INSERT INTO saved_list (User_id, Car_VIN, Days) "
+                    "VALUES "
+                    "(%s, %s, %s);"
+                )
+                param = (session['user'], vin, days)
+                cursor.execute(query, param)
+                data = cursor.fetchall()
+
+                if len(data) == 0:
+                    conn.commit()
+                    return ('', 204)
+                else:
+                    return json.dumps({'message':'add to saved list failed'})
+
+            except Exception as e:
+                return json.dumps({'exception':e})
+
+            finally:
+                if connected_to_database == 1:
+                    cursor.close()
+                    conn.close()
+
+        #read
+        elif request.method == "GET":
+            connected_to_database = 0
+            try:
+                conn = mysql.connect()
+                cursor = conn.cursor()
+                connected_to_database == 1
+                query = (
+                    "SELECT vin, Make, Model, Color, Year, Seats, CAST(Price_Per_Day AS CHAR) AS Price_Per_Day, Image_number, Days "
+                    "FROM car, image, saved_list "
+                    "WHERE car.vin = image.car_vin AND car.vin = saved_list.car_vin AND saved_list.user_id = %s AND car.deleted = 0; "
+                )
+                param = (session['user'])
+                cursor.execute(query, param)
+                
+                data = cursor.fetchall()
+
+                if len(data) > 0:
+                    return json.dumps(data)
+                else:
+                    return json.dumps({'message':'no cars available'})
+
+            except Exception as e:
+                return json.dumps({'exception':e})
+
+            finally:
+                if connected_to_database == 1:
+                    cursor.close()
+                    conn.close()
+    else:
+        return redirect("/login")
+
+@app.route('/savedListUpdate',methods=['POST'])
+def savedListUpdate():
+    if session.get('user'):
+        #update
         connected_to_database = 0
         try:
             vin = request.form['vin']
@@ -925,7 +1052,7 @@ def savedList():
 
             if len(data) == 0:
                 conn.commit()
-                return json.dumps({'message':'update to saved list confirmed'})
+                return redirect("/showSavedList")
             else:
                 return json.dumps({'message':'update to saved list failed'})
 
@@ -936,9 +1063,14 @@ def savedList():
             if connected_to_database == 1:
                 cursor.close()
                 conn.close()
+    else:
+        return redirect("/login")
 
-    #delete
-    elif request.method == 'DELETE':
+
+@app.route('/savedListDelete',methods=['POST'])
+def savedListDelete():
+    if session.get('user'):
+        #delete
         connected_to_database = 0
         try:
             vin = request.form['vin']
@@ -957,7 +1089,7 @@ def savedList():
 
             if len(data) == 0:
                 conn.commit()
-                return json.dumps({'message':'delete from saved list confirmed'})
+                return redirect("/showSavedList")
             else:
                 return json.dumps({'message':'delete from saved list failed'})
 
@@ -968,6 +1100,8 @@ def savedList():
             if connected_to_database == 1:
                 cursor.close()
                 conn.close()
+    else:
+        return redirect("/login")
 
 
 if __name__ == "__main__":

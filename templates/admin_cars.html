@@ -4,39 +4,32 @@
     Admin Cars
 {% endblock %}
 {% block main %}
-    <link rel ="stylesheet" href="/static/styles.css">
-    <form class="d-flex" action="/admin/cars" method="POST">
-        <input class="form-control me-sm-2" type="text" name ="search" id="search" placeholder="Search">
-        <br>
+    <nav class="navbar navbar-default" role="navigation">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    
+  
+    <div class="collapse navbar-collapse" id="navbar-collapse-1">
+     
+      <form class="navbar-form navbar-left" role="search" action="/admin/cars" method="POST">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search" name ="search" id="search">
+        </div>
+        <button type="submit" class="btn btn-default"><i class="glyphicon glyphicon-search"></i></button>
 
-        <label for="cars">Choose a Color:</label>
+        <label for="cars">&nbsp;&nbsp;&nbsp;&nbsp;Choose a Color:</label>
         <select name="cars_colors" id="cars_colors">
             <option value="None" selected disabled>None </option>
             {% for color in colors %}
                 <option value="{{color[0]}}">{{color[0]}}</option>
             {% endfor %}
         </select>
+        <label class="" for="btncheck1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add Car </label>
 
-        <br>
-        <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
-
-
-        
-        
-        <br>
-        <br>
-
-        <label class="" for="btncheck1">Add Car </label>
-        <a href="/admin/add" id="add_button" class="add_button"><i class="fas fa-plus"></i></a>
-        <br>
-    </form>
-    <br>
-    {{ pagination.info }}
-    <nav >
-        <ul class="pagination-page-info">
-            {{ pagination.links }}
-        </ul>
-    </nav>
+        <a href="/admin/add" id="add_button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></a>
+      </form>
+      
+    </div><!-- /.navbar-collapse -->
+</nav>
     <table class="table table-hover">
         <thead>
         <tr> 
@@ -53,7 +46,7 @@
         </thead>
         <tbody>
             {% for car in data %}
-            <tr  class="strikeout">
+            <tr>
                 <td><img src="/static/images/{{car[7]}}.jpg" height="150px" width="250px" alt={{car[7]}}> </td> 
                 <td>{{car[0]}}</td> 
                 <td>{{car[1]}}</td>

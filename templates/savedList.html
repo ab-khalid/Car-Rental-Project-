@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Car Rentals</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <script src="https://kit.fontawesome.com/6aac706f25.js" crossorigin="anonymous"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+        integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/6aac706f25.js" crossorigin="anonymous"></script>
+
+
+</head>
+
+<body>
+    <header>
+        <!-- end topHeaderRow -->
+
+        <nav class="navbar navbar-default ">
+            <div class="container">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                        data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">Car Rentals</a>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav navbar-left">
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/showHistory">Checkout History</a></li>
+                        <li><a href="/logout">Logout</a></li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container-fluid -->
+        </nav>
+    </header>
+
+    <h2 class="text-center">{{user}}'s saved list</h2>
+    <div class=container>
+        <table class="table table-hover">
+            <tbody>
+                {% for car in data %}
+                <tr>
+                    <td><img src="/static/images/{{car[7]}}.jpg" height="150px" width="250px" alt={{car[7]}}></td>
+                    <td>
+                        <ul style="list-style-type: none; text-align: right; font-weight: bold">
+                            <li>Vin</li>
+                            <li>Make</li>
+                            <li>Model</li>
+                            <li>Color</li>
+                            <li>Year</li>
+                            <li>Seats</li>
+                            <li>Price/Day</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul style="list-style-type: none; text-align: left;">
+                            <li>{{car[0]}}</li>
+                            <li>{{car[1]}}</li>
+                            <li>{{car[2]}}</li>
+                            <li>{{car[3]}}</li>
+                            <li>{{car[4]}}</li>
+                            <li>{{car[5]}}</li>
+                            <li>{{car[6]}}</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            <div class="p-2">
+                                <form action="/savedListUpdate" method="POST">
+                                    <!-- Forms only allow GET and POST -->
+                                    <input class="hidden" type="text" name="vin" id="vin" value="{{car[0]}}">
+                                    <div class="form">
+                                        <label class="text-nowrap">Number of days</label>
+                                        <input class="form-control" style="width: 80px" type="number" name="days"
+                                            id="days" value="{{car[8]}}">
+                                        <button class="btn btn-secondary .btn-block my-2 my-sm-0"
+                                            style="width: 80px; margin-top: 10px;" type="submit">Update</button>
+                                    </div>
+                                </form>
+                            </div>
+                    </td>
+                    <td>
+                        <div class="p-2">
+                            <label class=""> </label>
+                            <form action="/checkout" method="POST">
+                                <input class="hidden" type="text" name="vin" id="vin" value="{{car[0]}}">
+                                <input class="hidden" type="text" name="days" id="days" value="{{car[8]}}">
+                                <button class="btn btn-secondary .btn-block my-2 my-sm-0"
+                                    style="width: 80px; margin-top: 10px;" type="submit">Checkout</button>
+                            </form>
+                        </div>
+                        <div class="p-2">
+                            <form action="/savedListDelete" method="POST">
+                                <!-- Forms only allow GET and POST -->
+                                <input class="hidden" type="text" name="vin" id="vin" value="{{car[0]}}">
+                                <button class="btn btn-secondary .btn-block my-2 my-sm-0"
+                                    style="width: 80px; margin-top: 10px;" type="submit">Remove</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>
