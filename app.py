@@ -69,7 +69,7 @@ def index():
             cursor = conn.cursor()
             connected_to_database == 1
             # join car table with images on VIN number
-            cursor.execute("SELECT Color FROM car")
+            cursor.execute("SELECT DISTINCT Color FROM car")
             colors = cursor.fetchall()
 
             return render_template("index.html", data=data, colors=colors)
@@ -102,7 +102,7 @@ def index():
                     cursor = conn.cursor()
                     connected_to_database == 1
                     # join car table with images on VIN number
-                    cursor.execute("SELECT Color FROM car")
+                    cursor.execute("SELECT DISTINCT Color FROM car")
                     colors = cursor.fetchall()
                     cursor.close()
                     conn.close()
@@ -137,7 +137,7 @@ def index():
                     cursor = conn.cursor()
                     connected_to_database == 1
                     # join car table with images on VIN number
-                    cursor.execute("SELECT Color FROM car")
+                    cursor.execute("SELECT DISTINCT Color FROM car")
                     colors = cursor.fetchall()
                     cursor.close()
                     conn.close()
@@ -165,10 +165,37 @@ def index():
                     if connected_to_database == 1:
                         cursor.close()
                         conn.close()
-        else:
-            isFound = False
-            print("Item not found")
-            redirect('/')
+        else: #no inquiry given
+            if cars_color:#but color is given
+                try:
+
+                    #getting colors for catagories
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    # join car table with images on VIN number
+                    cursor.execute("SELECT DISTINCT Color FROM car")
+                    colors = cursor.fetchall()
+                    cursor.close()
+                    conn.close()
+                    connected_to_database == 0
+
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    
+                    cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                    JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN", (cars_color))
+
+                    data = cursor.fetchall()
+                    return render_template("index.html", data=data, colors=colors)
+                except Exception as e:
+                    print("exception:", str(e))
+                    return render_template('index.html')
+                finally:
+                    if connected_to_database == 1:
+                        cursor.close()
+                        conn.close()
     return render_template('index.html')
 
 def allowed_file(filename):
@@ -782,6 +809,10 @@ def savedList():
                 conn = mysql.connect()
                 cursor = conn.cursor()
                 connected_to_database == 1
+                saved_already = cursor.execute("SELECT car_vin FROM saved_list WHERE user_id = %s AND car_vin = %s", (session['user'], vin))
+                if saved_already:
+                    print('car already saved')
+                    return redirect("/")
                 query = (
                     "INSERT INTO saved_list (User_id, Car_VIN, Days) "
                     "VALUES "
@@ -793,7 +824,7 @@ def savedList():
 
                 if len(data) == 0:
                     conn.commit()
-                    return json.dumps({'message':'add to saved list confirmed'})
+                    return redirect("/")
                 else:
                     return json.dumps({'message':'add to saved list failed'})
 
