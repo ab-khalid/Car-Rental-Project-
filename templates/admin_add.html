@@ -5,16 +5,28 @@
 {% endblock %}
 
 {% block main %}
+<h4>Upload image</h4>
+<!--
+        <form method="post" action="/" enctype="multipart/form-data">
+            <dl>
+                <p>
+                    <input type="file" name="file" class="form-control" autocomplete="off" required>
+                </p>
+            </dl>
+            <p>
+                <input type="submit" value="Submit" class="btn btn-info">
+            </p>
+        </form>
+-->
 
-<form class="form-horizontal" method="POST" action="admin/add">
-    <label class="btn btn-primary" for="btncheck1">Add Car + </label>
-</form>
-
-    <form class="form-horizontal" method="POST" action="/admin/add">
-        <h1>Edit Car</h1>
-        {% for image in images %}
-            <img src="/static/images/{{image[0]}}.jpg" height="150px" width="250px" alt={{image[0]}}>
-        {% endfor %}
+    <form class="form-horizontal" method="POST" action="/admin/add" enctype="multipart/form-data">
+        <h1>Add Car</h1>
+        <h4>Upload image</h4>
+        <dl>
+            <p>
+                <input type="file" name="file" class="form-control" autocomplete="off">
+            </p>
+        </dl>
 
         <label for="fvin">VIN:</label><br>
         <input type="text" id="fvin" name="fvin"><br>
@@ -36,11 +48,10 @@
 
         <label for="fprice">Price in Dollars:</label><br>
         <input type="text" id="fprice" name="fprice"><br>
-        <!-- Update Button-->
         <div class="form-group">
             <label class="col-md-4 control-label" for="singlebutton"></label>
             <div class="col-md-4">
-                <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="submit" value="Update" />
+                <input id="singlebutton" name="singlebutton" class="btn btn-primary" type="submit" value="Submit" />
             </div>
         </div>
     </form>

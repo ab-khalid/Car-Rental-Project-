@@ -1,0 +1,17 @@
+{% extends "admin.html" %}
+
+{% block title %}
+    Admin Image Delete
+{% endblock %}
+
+{% block main %}
+    <form class="form-horizontal" method="POST" action="/delete/image/{{imageNumber}}">
+        <h1>Are you sure you want to delete this Image ?</h1>
+        <img src="/static/images/{{imageNumber}}.jpg" height="150px" width="250px" alt={{imageNumber[0]}}>
+        <br>
+        <!--No-->
+        <button type="submit" class="btn btn-danger" name="toDelete" value="noDelete">No</button>
+        <!--Yes-->
+        <button type="submit" class="btn btn-primary" name="toDelete" value="yesDelete">Yes</button>
+    </form>
+    {% endblock %}

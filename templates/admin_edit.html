@@ -5,14 +5,23 @@
 {% endblock %}
 
 {% block main %}
-    <form class="form-horizontal" method="POST" action="/edit/{{vin}}">
+    <form class="form-horizontal" method="POST" action="/edit/{{vin}}" enctype="multipart/form-data">
         <h1>Edit Car</h1>
+
+
+
+
+
         {% for image in images %}
             <img src="/static/images/{{image[0]}}.jpg" height="150px" width="250px" alt={{image[0]}}>
+            <a href="/delete/image/{{image[0]}}" id="trash_button" class="trash_button"><i class="fas fa-trash-alt"></i></a>
+            <br>
         {% endfor %}
 
 
+        
 
+        <br>
         <h5>Car VIN: {{vin}}</h5>
 
         <label for="fmake">Make:</label><br>
@@ -32,6 +41,15 @@
 
         <label for="fprice">Price in Dollars:</label><br>
         <input type="text" id="fprice" name="fprice" value="{{car[5]}}"><br>
+
+        <br>
+        <h4>Add More Pictures</h4>
+        <dl>
+            <p>
+                <input type="file" name="file" class="form-control" autocomplete="off">
+            </p>
+        </dl>
+        <br>
         <!-- Update Button-->
         <div class="form-group">
             <label class="col-md-4 control-label" for="singlebutton"></label>

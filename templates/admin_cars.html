@@ -4,6 +4,32 @@
     Admin Cars
 {% endblock %}
 {% block main %}
+    <form class="d-flex" action="/admin/cars" method="POST">
+        <input class="form-control me-sm-2" type="text" name ="search" id="search" placeholder="Search">
+        <br>
+
+        <label for="cars">Choose a Color:</label>
+        <select name="cars_colors" id="cars_colors">
+            <option value="None" selected disabled>None </option>
+            {% for color in colors %}
+                <option value="{{color[0]}}">{{color[0]}}</option>
+            {% endfor %}
+        </select>
+
+        <br>
+        <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+
+
+        
+        
+        <br>
+        <br>
+
+        <label class="" for="btncheck1">Add Car </label>
+        <a href="/admin/add" id="add_button" class="add_button"><i class="fas fa-plus"></i></a>
+        <br>
+    </form>
+    <br>
     <table class="table table-hover">
         <thead>
         <tr> 

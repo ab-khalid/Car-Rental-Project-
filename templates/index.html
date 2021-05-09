@@ -9,24 +9,17 @@
     <link href='http://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link href="/static/admin/bootstrap.min.css" rel="stylesheet">
+        <script src="https://kit.fontawesome.com/6aac706f25.js" crossorigin="anonymous"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 
 </head>
 
 <body>
     <header>
-        <div class="topHeaderRow">
-            <div class="container">
-                <div class="pull-right">
-                    <ul class="list-inline">
-                        <li><a href="#"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
-                        <li><a href="logout"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
-
-                    </ul>
-                </div>
-            </div>
-        </div>
         <!-- end topHeaderRow -->
 
         <nav class="navbar navbar-default ">
@@ -40,20 +33,16 @@
                         <span class="icon-bar"></span>
                     </button>
                     <a class="navbar-brand" href="#">Car Rentals</a>
-                    <a href="login">Login</a>
-                    <a href="register">Sign Up</a>
                 </div>
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav navbar-left">
-                        <li><a href="#">Home</a></li>
-                        <li><a href="#">About</a></li>
-                        <li><a href="#">Contact</a></li>
-                        <!--
+                        <li><a href="/">Home</a></li>
                         <li><a href="login">Login</a></li>
                         <li><a href="register">Sign Up</a></li>
-                        -->
+                        <li><a href="/logout">Logout</a></li>
+                        <li><a href="/admin">Admin</a></li>
                     </ul>
                 </div>
                 <!-- /.navbar-collapse -->
@@ -62,6 +51,58 @@
         </nav>
     </header>
 
+
+    <br>
+
+    <form class="d-flex" action="/" method="POST">
+        <input class="form-control me-sm-2" type="text" name ="search" id="search" placeholder="Search">
+        <br>
+
+        <label for="cars">Choose a Color:</label>
+        <select name="cars_colors" id="cars_colors">
+            <option value="None" selected disabled>None </option>
+            {% for color in colors %}
+                <option value="{{color[0]}}">{{color[0]}}</option>
+            {% endfor %}
+        </select>
+
+        <br>
+        <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+
+
+        
+        
+        <br>
+        <br>
+    </form>
+    <table class="table table-hover">
+        <thead>
+        <tr> 
+            <th scope="col">Car</th>
+            <th scope="col">VIN</th>
+            <th scope="col">Make</th>
+            <th scope="col">Model</th>
+            <th scope="col">Color</th>
+            <th scope="col">Year</th>
+            <th scope="col">Seats</th>
+            <th scope="col">Price Per Day</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for car in data %}
+            <tr>
+                <td><img src="/static/images/{{car[7]}}.jpg" height="150px" width="250px" alt={{car[7]}}> </td> 
+                <td>{{car[0]}}</td> 
+                <td>{{car[1]}}</td>
+                <td>{{car[2]}}</td>
+                <td>{{car[3]}}</td>
+                <td>{{car[4]}}</td>
+                <td>{{car[5]}}</td>
+                <td>{{car[6]}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 
 </html>

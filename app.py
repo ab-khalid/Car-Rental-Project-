@@ -1,14 +1,16 @@
 
-from flask import Flask, render_template, request, json, redirect, jsonify
+from flask import Flask, render_template, request, json, redirect, jsonify, send_from_directory
 from flaskext.mysql import MySQL
 from flask import session, flash
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_cors import CORS
 import os
 from werkzeug.utils import secure_filename
-#UPLOAD_FOLDER = '/static/images'
-#ALLOWED_EXTENSIONS = {'jpg'}
-#app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+import re
+UPLOAD_FOLDER = 'static/images/'
+ALLOWED_EXTENSIONS = {'jpg'}
+
+
 app = Flask(__name__)
 
 
@@ -23,17 +25,171 @@ app.config['MYSQL_DATABASE_PORT'] = 3306
 mysql.init_app(app)
 
 app.secret_key = 'secret key can be anything!'
-
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 print("\n\n\n\n")
 
 
+list_cars = []
+def list_cars():  
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT Make FROM car")
+    list_tuple = cursor.fetchall()
+    #returns list of lists
+    initial_list = [list(i) for i in list_tuple]
+    # flat list out of lists
+    list_cars = [item for sublist in initial_list for item in sublist]
+    
+    #capitalize all words for easy matching
+    for word in range (len(list_cars)):
+        list_cars[word] = list_cars[word].capitalize()
+    return list_cars
 
-
-
-@app.route('/')
+    
+@app.route('/', methods=['POST', 'GET'])
 def index():
+    if request.method == "GET":
+        connected_to_database = 0
+        print("cars", list_cars())
+        try:
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            connected_to_database == 1
+            # join car table with images on VIN number
+            cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day,"
+             " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN")
+            data = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            connected_to_database == 0
+
+
+            #getting colors for catagories
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            connected_to_database == 1
+            # join car table with images on VIN number
+            cursor.execute("SELECT Color FROM car")
+            colors = cursor.fetchall()
+
+            return render_template("index.html", data=data, colors=colors)
+        except Exception as e:
+            print("exception:", str(e))
+            return render_template('index.html')
+        finally:
+            if connected_to_database == 1:
+                cursor.close()
+                conn.close()
+    
+    else:
+        connected_to_database = 0
+        inquiry = request.form.get("search")
+        cars_color = request.form.get("cars_colors")
+        isInquiry = False
+        #look for substrings in string
+        substring = re.compile(f'.*{inquiry}', re.IGNORECASE)
+        substring_matches = list(filter(substring.match, list_cars()))
+        print(cars_color)
+        #if user searches for something 
+        if inquiry:
+            #if word is exactly the same as given in the searchbox
+            if inquiry.capitalize() in list_cars():
+                print
+                try:
+
+                    #getting colors for catagories
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    # join car table with images on VIN number
+                    cursor.execute("SELECT Color FROM car")
+                    colors = cursor.fetchall()
+                    cursor.close()
+                    conn.close()
+                    connected_to_database == 0
+
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    if cars_color is None:
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make = %s", ( inquiry))
+                    else:
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make = %s", (cars_color, inquiry))
+                    print(substring)
+                    data = cursor.fetchall()
+                    return render_template("index.html", data=data, colors=colors)
+                except Exception as e:
+                    print("exception:", str(e))
+                    return render_template('index.html')
+                finally:
+                    if connected_to_database == 1:
+                        cursor.close()
+                        conn.close()
+
+            #else there is a substring of that word
+            elif substring_matches:
+                try:
+
+                    #getting colors for catagories
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    # join car table with images on VIN number
+                    cursor.execute("SELECT Color FROM car")
+                    colors = cursor.fetchall()
+                    cursor.close()
+                    conn.close()
+                    connected_to_database == 0
+
+
+
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+
+                    if cars_color is None:
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make LIKE %s", ('%{}%'.format(inquiry)))
+                    else:
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make LIKE %s", (cars_color, '%{}%'.format(inquiry)))
+                    print(substring_matches)
+                    data = cursor.fetchall()
+                    return render_template("index.html", data=data, colors=colors)
+                except Exception as e:
+                    print("exception:", str(e))
+                    return render_template('index.html')
+                finally:
+                    if connected_to_database == 1:
+                        cursor.close()
+                        conn.close()
+        else:
+            isFound = False
+            print("Item not found")
+            redirect('/')
     return render_template('index.html')
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+'''
+@app.route('/', methods=['GET', 'POST'])
+def upload_image():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            print('No file part')
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return render_template('admin_add.html')
+        else:
+            print('not allowed')
+            return redirect('/admin/cars')
+'''
 @app.route('/admin/', methods=['POST', 'GET'])
 def admin():
     if request.method == "GET":
@@ -62,6 +218,7 @@ def admin_users():
 def admin_cars():
     if request.method == "GET":
         connected_to_database = 0
+        print("cars", list_cars())
         try:
             conn = mysql.connect()
             cursor = conn.cursor()
@@ -70,8 +227,20 @@ def admin_cars():
             cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day,"
              " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN")
             data = cursor.fetchall()
-                    
-            return render_template("admin_cars.html", data=data)
+            cursor.close()
+            conn.close()
+            connected_to_database == 0
+
+
+            #getting colors for catagories
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            connected_to_database == 1
+            # join car table with images on VIN number
+            cursor.execute("SELECT Color FROM car")
+            colors = cursor.fetchall()
+
+            return render_template("admin_cars.html", data=data, colors=colors)
         except Exception as e:
             print("exception:", str(e))
             return render_template('admin_cars.html')
@@ -79,6 +248,99 @@ def admin_cars():
             if connected_to_database == 1:
                 cursor.close()
                 conn.close()
+    
+    else:
+        connected_to_database = 0
+        inquiry = request.form.get("search")
+        cars_color = request.form.get("cars_colors")
+        isInquiry = False
+        #look for substrings in string
+        substring = re.compile(f'.*{inquiry}', re.IGNORECASE)
+        substring_matches = list(filter(substring.match, list_cars()))
+        print(cars_color)
+        #if user searches for something 
+        if inquiry:
+            #if word is exactly the same as given in the searchbox
+            if inquiry.capitalize() in list_cars():
+                print
+                try:
+
+                    #getting colors for catagories
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    # join car table with images on VIN number
+                    cursor.execute("SELECT Color FROM car")
+                    colors = cursor.fetchall()
+                    cursor.close()
+                    conn.close()
+                    connected_to_database == 0
+
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    if cars_color is None:
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make = %s", ( inquiry))
+                    else:
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make = %s", (cars_color, inquiry))
+                    print(substring)
+                    data = cursor.fetchall()
+                    return render_template("admin_cars.html", data=data, colors=colors)
+                except Exception as e:
+                    print("exception:", str(e))
+                    return render_template('admin_cars.html')
+                finally:
+                    if connected_to_database == 1:
+                        cursor.close()
+                        conn.close()
+
+            #else there is a substring of that word
+            elif substring_matches:
+                try:
+
+                    #getting colors for catagories
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    # join car table with images on VIN number
+                    cursor.execute("SELECT Color FROM car")
+                    colors = cursor.fetchall()
+                    cursor.close()
+                    conn.close()
+                    connected_to_database == 0
+
+
+
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+
+                    if cars_color is None:
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make LIKE %s", ('%{}%'.format(inquiry)))
+                    else:
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make LIKE %s", (cars_color, '%{}%'.format(inquiry)))
+                    print(substring_matches)
+                    data = cursor.fetchall()
+                    return render_template("admin_cars.html", data=data, colors=colors)
+                except Exception as e:
+                    print("exception:", str(e))
+                    return render_template('admin_cars.html')
+                finally:
+                    if connected_to_database == 1:
+                        cursor.close()
+                        conn.close()
+        else:
+            isFound = False
+            print("Item not found")
+            redirect('/admin/cars')
+
+
+
+
 @app.route('/edit/<vin>', methods=['POST', 'GET'])
 def admin_edit_cars(vin):
     if request.method == "GET":
@@ -117,6 +379,24 @@ def admin_edit_cars(vin):
         car_year = request.form['fyear']
         car_seats = request.form['fseats']
         car_price = request.form['fprice']
+
+        if 'file' not in request.files:
+            print('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            print('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        else:
+            print('not allowed')
+            return redirect('/admin/cars')
+        image_variable = secure_filename(file.filename)
+        #extracting numebr from file name
+        image_number = [int(s) for s in re.findall(r'\b\d+\b',image_variable)]   
+
         try:
             conn = mysql.connect()
             cursor = conn.cursor()
@@ -124,6 +404,17 @@ def admin_edit_cars(vin):
             cursor.execute("UPDATE car SET Make = %s, Model = %s, Color = %s, Year = %s, Seats = %s, Price_Per_Day = %s"
             "WHERE VIN = %s", (car_make, car_model, car_color, car_year, car_seats, car_price, vin))
             conn.commit()
+            cursor.close()
+            conn.close()
+            connected_to_database = 0
+            if image_number:
+                conn = mysql.connect()
+                cursor = conn.cursor()
+                connected_to_database = 1
+                cursor.execute("insert into image (car_VIN, image_number) values \
+                ((select VIN from car WHERE VIN = %s), %s)", (vin, image_number[0]))
+                conn.commit()
+
             return redirect("/admin/cars")
         except Exception as e:
             print("exception:", str(e))
@@ -197,33 +488,107 @@ def admin_delete_cars(vin):
         else:
             return redirect('/admin/cars')
 
+
+
+@app.route('/delete/image/<imageNumber>', methods=['POST', 'GET'])
+def admin_delete_image(imageNumber):
+    if request.method == "GET":
+        connected_to_database = 0
+        try:
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            connected_to_database = 1
+            #selecting image 
+            cursor.execute("SELECT image_number FROM image WHERE image_number = %s", (imageNumber))
+            image = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            connected_to_database = 0
+            return render_template("admin_image_delete.html", imageNumber= imageNumber)
+        except Exception as e:
+            print("exception:", str(e))
+            return render_template('admin_delete.html')
+        finally:
+            if connected_to_database == 1:
+                cursor.close()
+                conn.close()
+                connected_to_database = 0
+    elif request.method == "POST":
+        if request.form["toDelete"] == 'yesDelete':
+               #_user = session.get('user')
+                conn = mysql.connect()
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM image WHERE image_number = %s", (imageNumber))
+                conn.commit()
+                return redirect('/admin/cars')
+        #no delete
+        else:
+            return redirect('/admin/cars')
+
+
+
+
+
+
+
+
 @app.route('/admin/add', methods=['POST', 'GET'])
 def admin_add_cars():
     if request.method == "GET":
             return render_template("admin_add.html")
     elif request.method == "POST":
+        car_VIN = request.form['fvin']
         car_make = request.form['fmake']
         car_model = request.form['fmodel']
         car_color = request.form['fcolor']
         car_year = request.form['fyear']
         car_seats = request.form['fseats']
         car_price = request.form['fprice']
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            print('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            print('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        else:
+            print('not allowed')
+            return redirect('/admin/cars')
+        image_variable = secure_filename(file.filename)
+        #extracting numebr from file name
+        image_number = [int(s) for s in re.findall(r'\b\d+\b',image_variable)]        
         try:
             conn = mysql.connect()
             cursor = conn.cursor()
             connected_to_database = 1
-            cursor.execute("UPDATE car SET Make = %s, Model = %s, Color = %s, Year = %s, Seats = %s, Price_Per_Day = %s"
-            "WHERE VIN = %s", (car_make, car_model, car_color, car_year, car_seats, car_price, vin))
+            cursor.execute("INSERT INTO car (VIN, Make, Model, Color, Year, Seats, Price_Per_Day, DELETED)"
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", (car_VIN, car_make, car_model, car_color, car_year, car_seats, car_price, 0))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            connected_to_database = 0
+
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            connected_to_database = 1
+            cursor.execute("insert into image (car_VIN, image_number) values \
+            ((select VIN from car WHERE VIN = %s), %s)", (car_VIN, image_number[0]))
             conn.commit()
             return redirect("/admin/cars")
         except Exception as e:
             print("exception:", str(e))
-            return render_template('admin_edit.html')
+            return render_template('admin.html')
         finally:
             if connected_to_database == 1:
                 cursor.close()
                 conn.close()
                 connected_to_database = 0
+        
+        return redirect("/admin/cars")
             
 @app.route('/logout')
 def logout():
