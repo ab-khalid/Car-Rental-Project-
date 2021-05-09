@@ -633,7 +633,7 @@ def signUp():
         conn.commit()
         #return json.dumps({'message':'User created successfully !'})
         print("User created successfully")
-        return render_template("index.html")
+        return redirect("/login") #redirect instead of render_template
     else:
         print("User not created")
         return render_template("register.html")
@@ -662,7 +662,7 @@ def login():
         if len(data) > 0 and check_password_hash(data[0][2], password):
             session['user'] = data[0][0]
             print("User signed in! ")
-            return render_template('index.html')
+            return redirect('/showSavedList') #redirect instead of render template
         else:
             print("Username or password are wrong")
             return render_template('login.html')
@@ -715,15 +715,54 @@ def checkout():
             conn.close()
 
 
-@app.route('/showSavedList',methods=['GET'])
-def savedlist():
+    
+@app.route('/showSavedList', methods=['GET'])
+def showSavedlist():
     if session.get('user'):
-        return json.dumps({'message':'savedlist.html'})
+        user = session.get('user')
+        connected_to_database = 0
+        try:
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            connected_to_database == 1
+            # join car table with images on VIN number
+            query = (
+                "SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number, saved_list.Days "
+                "FROM car, image, saved_list "
+                "WHERE car.VIN = image.CAR_VIN "
+                "   AND car.VIN = saved_list.Car_VIN "
+                "   AND saved_list.User_id = %s "
+                "GROUP BY car.VIN;"
+            )
+            param = (session['user'])
+            cursor.execute(query, param)
+            data = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            connected_to_database == 0
+
+            #getting colors for catagories
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            connected_to_database == 1
+            query = "SELECT user.username FROM user WHERE id = %s ;"
+            param = (session['user'])
+            cursor.execute(query, param)
+            username = cursor.fetchall()
+
+            return render_template("savedList.html", data=data, user=username[0][0])
+        except Exception as e:
+            print("exception:", str(e))
+            return render_template('index.html')
+        finally:
+            if connected_to_database == 1:
+                cursor.close()
+                conn.close()
     else:
         return render_template('error.html', error = 'Unauthorized Access')
-    
-    
-@app.route('/savedList',methods=['POST', 'GET', 'PUT', 'DELETE'])
+
+
+@app.route('/savedList',methods=['POST', 'GET'])
 def savedList():
     #create
     if request.method == "POST":
@@ -792,74 +831,77 @@ def savedList():
                 cursor.close()
                 conn.close()
 
+@app.route('/savedListUpdate',methods=['POST'])
+def savedListUpdate():
     #update
-    elif request.method == "PUT":
-        connected_to_database = 0
-        try:
-            vin = request.form['vin']
-            days = request.form['days']
-            if not vin:
-                return json.dumps({'message':'missing vin'})
-            elif not days:
-                return json.dumps({'message':'missing days'})
+    connected_to_database = 0
+    try:
+        vin = request.form['vin']
+        days = request.form['days']
+        if not vin:
+            return json.dumps({'message':'missing vin'})
+        elif not days:
+            return json.dumps({'message':'missing days'})
 
-            conn = mysql.connect()
-            cursor = conn.cursor()
-            connected_to_database == 1
-            query = (
-                "UPDATE saved_list "
-                "SET Days = %s "
-                "WHERE user_id = %s AND car_vin = %s; "
-            )
-            param = (days, session['user'], vin,)
-            cursor.execute(query, param)
-            data = cursor.fetchall()
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        connected_to_database == 1
+        query = (
+            "UPDATE saved_list "
+            "SET Days = %s "
+            "WHERE user_id = %s AND car_vin = %s; "
+        )
+        param = (days, session['user'], vin,)
+        cursor.execute(query, param)
+        data = cursor.fetchall()
 
-            if len(data) == 0:
-                conn.commit()
-                return json.dumps({'message':'update to saved list confirmed'})
-            else:
-                return json.dumps({'message':'update to saved list failed'})
+        if len(data) == 0:
+            conn.commit()
+            return redirect("/showSavedList")
+        else:
+            return json.dumps({'message':'update to saved list failed'})
 
-        except Exception as e:
-            return json.dumps({'exception':e})
+    except Exception as e:
+        return json.dumps({'exception':e})
 
-        finally:
-            if connected_to_database == 1:
-                cursor.close()
-                conn.close()
+    finally:
+        if connected_to_database == 1:
+            cursor.close()
+            conn.close()
 
+
+@app.route('/savedListDelete',methods=['POST'])
+def savedListDelete():
     #delete
-    elif request.method == 'DELETE':
-        connected_to_database = 0
-        try:
-            vin = request.form['vin']
-            if not vin:
-                return json.dumps({'message':'missing vin'})
+    connected_to_database = 0
+    try:
+        vin = request.form['vin']
+        if not vin:
+            return json.dumps({'message':'missing vin'})
 
-            conn = mysql.connect()
-            cursor = conn.cursor()
-            connected_to_database == 1
-            query = (
-                "DELETE FROM saved_list WHERE car_vin = %s; "
-            )
-            param = (vin)
-            cursor.execute(query, param)
-            data = cursor.fetchall()
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        connected_to_database == 1
+        query = (
+            "DELETE FROM saved_list WHERE car_vin = %s; "
+        )
+        param = (vin)
+        cursor.execute(query, param)
+        data = cursor.fetchall()
 
-            if len(data) == 0:
-                conn.commit()
-                return json.dumps({'message':'delete from saved list confirmed'})
-            else:
-                return json.dumps({'message':'delete from saved list failed'})
+        if len(data) == 0:
+            conn.commit()
+            return redirect("/showSavedList")
+        else:
+            return json.dumps({'message':'delete from saved list failed'})
 
-        except Exception as e:
-            return json.dumps({'exception':e})
+    except Exception as e:
+        return json.dumps({'exception':e})
 
-        finally:
-            if connected_to_database == 1:
-                cursor.close()
-                conn.close()
+    finally:
+        if connected_to_database == 1:
+            cursor.close()
+            conn.close()
 
 
 if __name__ == "__main__":
