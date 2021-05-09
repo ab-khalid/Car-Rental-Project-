@@ -812,7 +812,7 @@ def savedList():
                 saved_already = cursor.execute("SELECT car_vin FROM saved_list WHERE user_id = %s AND car_vin = %s", (session['user'], vin))
                 if saved_already:
                     print('car already saved')
-                    return redirect("/")
+                    return ('', 204)
                 query = (
                     "INSERT INTO saved_list (User_id, Car_VIN, Days) "
                     "VALUES "
@@ -824,7 +824,7 @@ def savedList():
 
                 if len(data) == 0:
                     conn.commit()
-                    return redirect("/")
+                    return ('', 204)
                 else:
                     return json.dumps({'message':'add to saved list failed'})
 
