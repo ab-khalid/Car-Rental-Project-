@@ -132,7 +132,6 @@ def index():
         if inquiry:
             #if word is exactly the same as given in the searchbox
             if inquiry.capitalize() in list_cars():
-                print
                 try:
 
                     #getting colors for catagories
