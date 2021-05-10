@@ -8,46 +8,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href='http://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-    <link rel ="stylesheet" href="/static/styles.css">
-        <script src="https://kit.fontawesome.com/6aac706f25.js" crossorigin="anonymous"></script>
-        <!-- Latest compiled and minified CSS -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://kit.fontawesome.com/6aac706f25.js" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
-        <!-- Optional theme -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+        integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
-        <!-- Latest compiled and minified JavaScript -->
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-                <script src="https://kit.fontawesome.com/6aac706f25.js" crossorigin="anonymous"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/6aac706f25.js" crossorigin="anonymous"></script>
 
 
     <script>
-        //check if username is available
         $(function () {
             $('form').on('submit', function (e) {
                 e.preventDefault()
-                $.ajax({
-                    url: '/preRegisterCheck',
-                    data: {username: $('form #username').val()},
-                    type: 'GET',
-                    success: function (response) {
-                        //username available
-                        $.ajax({
-                            url: '/register',
-                            data: $('form').serialize(),
-                            type: 'POST',
-                            success: function (response) {
-                                $('#success').html("<div class='alert alert-success'><strong>Successfully Registered. </strong></div>");
-                            },
-                            error: function (error) {
-                                console.log(error)
-                            }
-                        });
-                    },
-                    error: function (error) {
-                        $('#success').html("<div class='alert alert-danger'><strong>Username not available, try another one. </strong></div>");
-                    }
-                });
+                //validate password and confirm pasword
+                if ($('#password').val().length < 6) {
+
+                    $('#success').html("<div class='alert alert-danger'><strong>Password too short, must be at least 6 characters. </strong></div>");
+                }
+                else if ((/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{6,}$/.test($('#password').val())) == false) {
+                    $('#success').html("<div class='alert alert-danger'><strong>Password must contain a lowercase letter, uppercase letter, and digit. </strong></div>");
+                }
+                else if  ($('#password').val() != $('#confirmation').val()){
+                    $('#success').html("<div class='alert alert-danger'><strong>Password and confirm password must match. </strong></div>");
+                }
+                else { //fields are validated, check if username is available.
+                    $.ajax({
+                        url: '/preRegisterCheck',
+                        data: { username: $('form #username').val() },
+                        type: 'GET',
+                        success: function (response) {
+                            //username is available, register.
+                            $.ajax({
+                                url: '/register',
+                                data: $('form').serialize(),
+                                type: 'POST',
+                                success: function (response) {
+                                    $('#success').html("<div class='alert alert-success'><strong>Successfully Registered. </strong></div>");
+                                },
+                                error: function (error) {
+                                    console.log(error)
+                                }
+                            });
+                        },
+                        error: function (error) {
+                            $('#success').html("<div class='alert alert-danger'><strong>Username not available, try another one. </strong></div>");
+                        }
+                    });
+                }
             });
         });
     </script>
@@ -55,28 +72,29 @@
 </head>
 
 <body>
-    <div id="success"></div> 
-    {% with messages = get_flashed_messages(with_categories=true) %} <!-- get all flash messages and put them in list messages -->
-                {% if messages %}
-                    {% for category,message in messages %}
-                        {% if category == 'error' %}
-                            <div class="alert alert-danger" role="alert">
-                                {{message}}
-                            </div>
-                        {% elif category == 'primary' %}
-                            <div class="alert alert-primary" role="alert">
-                                {{message}}
-                            </div>
-                        {% else %}
-                            <div class="alert alert-success" role="alert">
-                                {{message}}
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+    <div id="success"></div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    <!-- get all flash messages and put them in list messages -->
+    {% if messages %}
+    {% for category,message in messages %}
+    {% if category == 'error' %}
+    <div class="alert alert-danger" role="alert">
+        {{message}}
+    </div>
+    {% elif category == 'primary' %}
+    <div class="alert alert-primary" role="alert">
+        {{message}}
+    </div>
+    {% else %}
+    <div class="alert alert-success" role="alert">
+        {{message}}
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
     <div id="error" style="color: red; font-size:medium;"></div>
- 
+
     <header>
         <!-- end topHeaderRow -->
 
@@ -84,7 +102,8 @@
             <div class="container">
                 <!-- Brand and toggle get grouped for better mobile display -->
                 <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                        data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
                         <span class="sr-only">Toggle navigation</span>
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
@@ -97,10 +116,7 @@
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav navbar-left">
                         <li><a href="/">Home</a></li>
-                        <li><a href="/showSavedList">Saved List</a></li>
                         <li><a href="login">Login</a></li>
-                        <li><a href="register">Sign Up</a></li>
-                        <li><a href="/logout">Logout</a></li>
                         <li><a href="/admin/login">Admin Login</a></li>
                     </ul>
                 </div>

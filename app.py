@@ -833,16 +833,13 @@ def signUp():
         print("User created successfully")
         return redirect("/login") #redirect instead of render_template
     else:
-        print("User not created")
-        return render_template("register.html")
+        return render_template("error.html", error_message = 'user not created')
     print("didnt")
     return render_template("register.html")
 
 @app.route('/preRegisterCheck', methods=['GET'])
 def preRegisterCheck():
     username = request.args['username']
-    
-    
     #connect to sql
     conn = mysql.connect()
     cursor = conn.cursor()
@@ -864,11 +861,9 @@ def login():
         username = request.form['username']
         password = request.form['password']
         if not username:
-            print('Must Provide Username')
-            return render_template("login.html")
+            return render_template("error.html", error_message = 'missing Username field')
         elif not request.form.get("password"):
-            print('Must Provide Password')
-            return render_template("login.html")
+            return render_template("error.html", error_message = 'missing Password field')
         conn = mysql.connect()
         cursor = conn.cursor()
         connected_to_database == 1
@@ -879,8 +874,7 @@ def login():
             print("User signed in! ")
             return redirect('/showSavedList') #redirect instead of render template
         else:
-            print("Username or password are wrong")
-            return render_template('login.html')
+            return render_template("error.html", error_message = 'Username or password are wrong.')
     except Exception as e:
         print("exception:", str(e))
         return render_template('login.html')
@@ -900,11 +894,9 @@ def admin_login():
             username = request.form['username']
             password = request.form['password']
             if not username:
-                print('Must Provide Username')
-                return render_template("admin_login.html")
+                return render_template("error.html", error_message = 'missing Username field')
             elif not request.form.get("password"):
-                print('Must Provide Password')
-                return render_template("admin_login.html")
+                return render_template("error.html", error_message = 'missing Password field')
             conn = mysql.connect()
             cursor = conn.cursor()
             connected_to_database == 1
@@ -912,11 +904,10 @@ def admin_login():
             data = cursor.fetchall()
             if len(data) > 0 and check_password_hash(data[0][2], password):
                 session['user'] = data[0][0]
-                print("User signed in! ")
+                session['admin'] = "true"
                 return render_template('admin.html')
             else:
-                print("Username or password are wrong")
-                return render_template('admin_login.html')
+                return render_template("error.html", error_message = 'Username or password are wrong.')
         except Exception as e:
             print("exception:", str(e))
             return render_template('admin_login.html')
@@ -937,9 +928,9 @@ def checkout():
             vin = request.form['vin']
             days = request.form['days']
             if not vin:
-                return json.dumps({'message':'missing vin'})
+                return render_template("error.html", error_message = 'missing VIN field')
             elif not days:
-                return json.dumps({'message':'missing days'})
+                return render_template("error.html", error_message = 'missing days field')
 
             conn = mysql.connect()
             cursor = conn.cursor()
@@ -949,8 +940,7 @@ def checkout():
                 "SELECT rental.car_vin FROM rental "
                 "WHERE rental.car_vin = %s and rental.return_date IS NULL;", (vin))
             if out_already:
-                return json.dumps({'message':'Car unavailable.'})
-
+                return render_template("error.html", error_message = 'That car is already rented out, it is unavailable.')
             #remove from saved list
             query = (
                 "DELETE FROM saved_list WHERE user_id = %s AND car_vin = %s; "
@@ -973,7 +963,7 @@ def checkout():
                 conn.commit()
                 return redirect("/showHistory")
             else:
-                return json.dumps({'message':'rental failed, is the vin number valid?'})
+                return render_template("error.html", error_message = 'rental failed')
 
         except Exception as e:
             return json.dumps({'exception':e})
@@ -1076,7 +1066,7 @@ def savedList():
                 vin = request.form['vin']
                 days = request.form['days']
                 if not vin:
-                    return json.dumps({'message':'missing vin'})
+                    return render_template("error.html", error_message = 'missing VIN field')
                 elif not days:
                     days=1
 
@@ -1100,7 +1090,7 @@ def savedList():
                     conn.commit()
                     return ('', 204)
                 else:
-                    return json.dumps({'message':'add to saved list failed'})
+                    return render_template("error.html", error_message = 'add to saved list failed')
 
             except Exception as e:
                 return json.dumps({'exception':e})
@@ -1130,7 +1120,7 @@ def savedList():
                 if len(data) > 0:
                     return json.dumps(data)
                 else:
-                    return json.dumps({'message':'no cars available'})
+                    return render_template("error.html", error_message = 'no cars available')
 
             except Exception as e:
                 return json.dumps({'exception':e})
@@ -1151,9 +1141,9 @@ def savedListUpdate():
             vin = request.form['vin']
             days = request.form['days']
             if not vin:
-                return json.dumps({'message':'missing vin'})
+                return render_template("error.html", error_message = 'missing VIN field')
             elif not days:
-                return json.dumps({'message':'missing days'})
+                return render_template("error.html", error_message = 'missing days field')
 
             conn = mysql.connect()
             cursor = conn.cursor()
@@ -1171,7 +1161,7 @@ def savedListUpdate():
                 conn.commit()
                 return redirect("/showSavedList")
             else:
-                return json.dumps({'message':'update to saved list failed'})
+                return render_template("error.html", error_message = 'update to saved list failed')
 
         except Exception as e:
             return json.dumps({'exception':e})
@@ -1192,7 +1182,7 @@ def savedListDelete():
         try:
             vin = request.form['vin']
             if not vin:
-                return json.dumps({'message':'missing vin'})
+                return render_template("error.html", error_message = 'missing VIN field')
 
             conn = mysql.connect()
             cursor = conn.cursor()
@@ -1208,7 +1198,7 @@ def savedListDelete():
                 conn.commit()
                 return redirect("/showSavedList")
             else:
-                return json.dumps({'message':'delete from saved list failed'})
+                return render_template("error.html", error_message = 'delete from saved list failed')
 
         except Exception as e:
             return json.dumps({'exception':e})
@@ -1220,6 +1210,9 @@ def savedListDelete():
     else:
         return redirect("/login")   
 
+@app.route('/error', methods=['GET'])
+def error():
+    return render_template("error.html", error_message = 'error message goes here')
 
 if __name__ == "__main__":
     app.run(debug=True)   
