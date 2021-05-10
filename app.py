@@ -21,7 +21,7 @@ app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'root'
 app.config['MYSQL_DATABASE_DB'] = 'car_rental'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
-app.config['MYSQL_DATABASE_PORT'] = 3306 
+app.config['MYSQL_DATABASE_PORT'] = 3307 
 mysql.init_app(app)
 
 app.secret_key = 'secret key can be anything!'
@@ -1028,7 +1028,7 @@ def showSavedlist():
                 "FROM car, image, saved_list "
                 "WHERE car.VIN = image.CAR_VIN "
                 "   AND car.VIN = saved_list.Car_VIN "
-                "   AND saved_list.User_id = %s AND car.deleted = 0"
+                "   AND saved_list.User_id = %s AND car.deleted = 0 "
                 "GROUP BY car.VIN;"
             )
             param = (session['user'])
