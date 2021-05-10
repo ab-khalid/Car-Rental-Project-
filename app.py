@@ -73,8 +73,6 @@ def index():
         try:
             conn = mysql.connect()
             cursor = conn.cursor()
-
-
     # Setting page, limit and offset variables
             per_page = 4
             page = request.args.get(get_page_parameter(), type=int, default=1)
@@ -116,7 +114,7 @@ def index():
                 cursor.close()
                 conn.close()
     
-    else:
+    elif request.method == "POST":
         connected_to_database = 0
         inquiry = request.form.get("search")
         cars_color = request.form.get("cars_colors")
@@ -125,12 +123,11 @@ def index():
         substring = re.compile(f'.*{inquiry}', re.IGNORECASE)
         substring_matches = list(filter(substring.match, list_cars()))
 
+
         # Setting page, limit and offset variables
-        per_page = 4
+        per_page = 8
         page = request.args.get(get_page_parameter(), type=int, default=1)
         offset = (page - 1) * per_page
-
-
         #if user searches for something 
         if inquiry:
             #if word is exactly the same as given in the searchbox
@@ -149,25 +146,36 @@ def index():
                     conn.close()
                     connected_to_database == 0
 
+
+
                     conn = mysql.connect()
                     cursor = conn.cursor()
                     connected_to_database == 1
                     if cars_color is None:
+                        #selectig all from database
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
                         JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make = %s", ( inquiry))
+                        total = cursor.fetchall()
 
+                        
+                        #apply pagination 
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make = %s LIMIT %s OFFSET %s", (inquiry, per_page, offset))
 
+                        data = cursor.fetchall()
                     else:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
                         JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make = %s ", (cars_color, inquiry))
+                        total = cursor.fetchall()
 
-                    '''
+                        
+
+                        #apply pagination 
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
-                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make = %s DESC LIMIT %s OFFSET %s", (cars_color, inquiry, per_page, offset)) 
-                    '''
-                    print(substring)
-                    total = cursor.fetchall()
-                    return render_template("index.html", data=data, colors=colors)
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make = %s LIMIT %s OFFSET %s", (cars_color, inquiry, per_page, offset)) 
+                        data = cursor.fetchall()
+                    pagination = Pagination(page=page, per_page=per_page, offset=offset, total=len(total), record_name='data', css_framework='bootstrap3')
+                    return render_template("index.html", data=data, colors=colors, pagination=pagination)
                 except Exception as e:
                     print("exception:", str(e))
                     return render_template('index.html')
@@ -200,12 +208,30 @@ def index():
                     if cars_color is None:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
                         JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make LIKE %s", ('%{}%'.format(inquiry)))
+                        total = cursor.fetchall()
+
+                        '''
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make = %s LIMIT %s OFFSET %s", (inquiry, per_page, offset))
+                        '''
+                        #apply pagination 
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make LIKE %s LIMIT %s OFFSET %s", ('%{}%'.format(inquiry), per_page, offset))
+
+                        data = cursor.fetchall()
                     else:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
                         JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make LIKE %s", (cars_color, '%{}%'.format(inquiry)))
-                    print(substring_matches)
-                    data = cursor.fetchall()
-                    return render_template("index.html", data=data, colors=colors)
+                        total = cursor.fetchall()
+
+                        
+                        #apply pagination 
+
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make LIKE %s LIMIT %s OFFSET %s", (cars_color, '%{}%'.format(inquiry), per_page, offset))
+                        data = cursor.fetchall()
+                    pagination = Pagination(page=page, per_page=per_page, offset=offset, total=len(total), record_name='data', css_framework='bootstrap3')
+                    return render_template("index.html", data=data, colors=colors, pagination=pagination)
                 except Exception as e:
                     print("exception:", str(e))
                     return render_template('index.html')
@@ -394,6 +420,12 @@ def admin_cars():
         substring = re.compile(f'.*{inquiry}', re.IGNORECASE)
         substring_matches = list(filter(substring.match, list_cars()))
         print(cars_color)
+
+        # Setting page, limit and offset variables
+        per_page = 8
+        page = request.args.get(get_page_parameter(), type=int, default=1)
+        offset = (page - 1) * per_page
+
         #if user searches for something 
         if inquiry:
             #if word is exactly the same as given in the searchbox
@@ -406,7 +438,7 @@ def admin_cars():
                     cursor = conn.cursor()
                     connected_to_database == 1
                     # join car table with images on VIN number
-                    cursor.execute("SELECT Color FROM car")
+                    cursor.execute("SELECT DISTINCT Color FROM car")
                     colors = cursor.fetchall()
                     cursor.close()
                     conn.close()
@@ -418,12 +450,27 @@ def admin_cars():
                     if cars_color is None:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
                         JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make = %s", ( inquiry))
+                        total = cursor.fetchall()
+
+
+
+                        #apply pagination 
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make = %s LIMIT %s OFFSET %s", (inquiry, per_page, offset))
+                        data = cursor.fetchall()
+
                     else:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
                         JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make = %s", (cars_color, inquiry))
-                    print(substring)
-                    data = cursor.fetchall()
-                    return render_template("admin_cars.html", data=data, colors=colors)
+                        total = cursor.fetchall()
+
+
+                        #apply pagination 
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make = %s LIMIT %s OFFSET %s", (cars_color, inquiry, per_page, offset)) 
+                        data = cursor.fetchall()
+                    pagination = Pagination(page=page, per_page=per_page, offset=offset, total=len(total), record_name='data', css_framework='bootstrap3')
+                    return render_template("admin_cars.html", data=data, colors=colors , pagination=pagination)
                 except Exception as e:
                     print("exception:", str(e))
                     return render_template('admin_cars.html')
@@ -456,12 +503,25 @@ def admin_cars():
                     if cars_color is None:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
                         JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make LIKE %s", ('%{}%'.format(inquiry)))
+                        total = cursor.fetchall()
+
+                        #apply pagination 
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make LIKE %s LIMIT %s OFFSET %s", ('%{}%'.format(inquiry), per_page, offset))
+                        data = cursor.fetchall()
                     else:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
                         JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make LIKE %s", (cars_color, '%{}%'.format(inquiry)))
-                    print(substring_matches)
-                    data = cursor.fetchall()
-                    return render_template("admin_cars.html", data=data, colors=colors)
+                        total = cursor.fetchall()
+
+                        #apply pagination 
+
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make LIKE %s LIMIT %s OFFSET %s", (cars_color, '%{}%'.format(inquiry), per_page, offset))
+                        data = cursor.fetchall()
+
+                    pagination = Pagination(page=page, per_page=per_page, offset=offset, total=len(total), record_name='data', css_framework='bootstrap3')
+                    return render_template("admin_cars.html", data=data, colors=colors, pagination=pagination)
                 except Exception as e:
                     print("exception:", str(e))
                     return render_template('admin_cars.html')
