@@ -778,7 +778,21 @@ def signUp():
     print("didnt")
     return render_template("register.html")
 
+@app.route('/preRegisterCheck', methods=['GET'])
+def preRegisterCheck():
+    username = request.args['username']
+    
+    
+    #connect to sql
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    username_exists = cursor.execute("SELECT username FROM user WHERE username = %s", (username))
+    data = cursor.fetchall()
 
+    if len(data) == 0:
+        return json.dumps({'success':True, 'message':'User does not exist, Ok to register.'}), 200, {'ContentType':'application/json'} 
+    else:
+        return json.dumps({'error':True, 'message':'User already exists, try another username.'}), 409, {'ContentType':'application/json'} 
 
 
 @app.route('/login',methods=['POST', 'GET'])
