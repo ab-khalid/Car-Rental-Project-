@@ -83,14 +83,14 @@ def index():
             connected_to_database == 1
             # join car table with images on VIN number, get all
             cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day,"
-            " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN")
+            " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN WHERE car.deleted = 0 GROUP BY car.VIN")
             total = cursor.fetchall()
 
             
             #query by limit and offset
 
             cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day,"
-            " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN DESC LIMIT %s OFFSET %s" , (per_page, offset))
+            " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN WHERE car.deleted = 0 GROUP BY car.VIN DESC LIMIT %s OFFSET %s" , (per_page, offset))
             data  = cursor.fetchall()
 
             cursor.close()
@@ -154,12 +154,12 @@ def index():
                     connected_to_database == 1
                     if cars_color is None:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
-                        JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make = %s", ( inquiry))
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.deleted = 0 GROUP BY car.VIN HAVING car.Make = %s", ( inquiry))
 
 
                     else:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
-                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make = %s ", (cars_color, inquiry))
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s AND car.deleted = 0 GROUP BY car.VIN HAVING car.Make = %s ", (cars_color, inquiry))
 
                     '''
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
@@ -199,10 +199,10 @@ def index():
 
                     if cars_color is None:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
-                        JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make LIKE %s", ('%{}%'.format(inquiry)))
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.deleted = 0 GROUP BY car.VIN HAVING car.Make LIKE %s", ('%{}%'.format(inquiry)))
                     else:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
-                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make LIKE %s", (cars_color, '%{}%'.format(inquiry)))
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s AND car.deleted = 0 GROUP BY car.VIN HAVING car.Make LIKE %s", (cars_color, '%{}%'.format(inquiry)))
                     print(substring_matches)
                     data = cursor.fetchall()
                     return render_template("index.html", data=data, colors=colors)
@@ -233,7 +233,7 @@ def index():
                     connected_to_database == 1
                     
                     cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
-                    JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN", (cars_color))
+                    JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s AND car.deleted = 0 GROUP BY car.VIN", (cars_color))
 
                     data = cursor.fetchall()
                     return render_template("index.html", data=data, colors=colors)
@@ -971,7 +971,7 @@ def showSavedlist():
                 "FROM car, image, saved_list "
                 "WHERE car.VIN = image.CAR_VIN "
                 "   AND car.VIN = saved_list.Car_VIN "
-                "   AND saved_list.User_id = %s "
+                "   AND saved_list.User_id = %s AND car.deleted = 0"
                 "GROUP BY car.VIN;"
             )
             param = (session['user'])
