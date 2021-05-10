@@ -27,7 +27,12 @@
 
         <a href="/admin/add" id="add_button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></a>
       </form>
-      
+      <br>
+      <br>
+      {% if pagination %}
+        {{ pagination.info }}
+        {{ pagination.links }}
+      {% endif %}
     </div><!-- /.navbar-collapse -->
 </nav>
     <table class="table table-hover">
@@ -42,6 +47,7 @@
             <th scope="col">Seats</th>
             <th scope="col">Price Per Day</th>
             <th scope="col">Edit / Delete</th>
+            <th scope="col">Soft Delete</th>
         </tr>
         </thead>
         <tbody>
@@ -55,7 +61,8 @@
                 <td>{{car[4]}}</td>
                 <td>{{car[5]}}</td>
                 <td>{{car[6]}}</td>
-                <td style="margin: 20px; padding-left: 30px;"><pre> <a href="/edit/{{car[0]}}" id="edit_button" class="edit_button"><i class="far fa-edit"></a></i> <a href="/delete/{{car[0]}}" id="trash_button" class="trash_button"><i class="fas fa-trash-alt"></i></a>  </pre></td>
+                <td ><pre style="margin: 5px; padding-left: 10px;"> <a href="/edit/{{car[0]}}" id="edit_button" class="edit_button"><i class="far fa-edit"></a></i> <a href="/delete/{{car[0]}}" id="trash_button" class="trash_button"><i class="fas fa-trash-alt"></i></a>   </pre></td>
+                <td> <form method="POST" action="/remove/{{car[0]}}"> <button type="submit"><i class="fas fa-minus-circle"></button></i> </form>  </td>
 
             </tr>
             {% endfor %}

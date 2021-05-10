@@ -49,7 +49,27 @@
 </head>
 
 <body>
-    <div id="success"></div>
+    <div id="success"></div> 
+    {% with messages = get_flashed_messages(with_categories=true) %} <!-- get all flash messages and put them in list messages -->
+                {% if messages %}
+                    {% for category,message in messages %}
+                        {% if category == 'error' %}
+                            <div class="alert alert-danger" role="alert">
+                                {{message}}
+                            </div>
+                        {% elif category == 'primary' %}
+                            <div class="alert alert-primary" role="alert">
+                                {{message}}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-success" role="alert">
+                                {{message}}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+    <div id="error" style="color: red; font-size:medium;"></div>
     <header>
         <div class="topHeaderRow">
             <div class="container">
@@ -112,7 +132,7 @@
                 placeholder="Password Confirmation">
         </div>
         <br>
-        <button type="submit" class="btn btn-primary" name="btnSignUp">Sign Up</button>
+        <button type="submit" class="btn btn-primary" name="btnSignUp" id="btnSignUp">Sign Up</button>
         <br>
 
     </form>

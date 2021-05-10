@@ -1,5 +1,7 @@
 
-from flask import Flask, render_template, request, json, redirect, jsonify, send_from_directory
+from flask import Flask, render_template, request, json, redirect, jsonify, send_from_directory, Blueprint
+from flask_paginate import Pagination, get_page_parameter
+
 from flaskext.mysql import MySQL
 from flask import session, flash
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -29,6 +31,26 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 print("\n\n\n\n")
 
 
+#creating root user and hashing their password
+connected_to_database = 0
+try:
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    connected_to_database == 1
+    admin_pass = 'root'
+    admin_username = 'root'
+    cursor.execute("INSERT INTO admin(username, hashed_password) VALUES (%s, %s)", (admin_username, generate_password_hash(admin_pass)))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    connected_to_database == 0
+except Exception as e:
+    print("exception:", str(e))
+finally:
+    if connected_to_database == 1:
+        cursor.close()
+        conn.close()
+
 list_cars = []
 def list_cars():  
     conn = mysql.connect()
@@ -50,19 +72,34 @@ def list_cars():
 def index():
     if request.method == "GET":
         connected_to_database = 0
-        print("cars", list_cars())
         try:
             conn = mysql.connect()
             cursor = conn.cursor()
+
+
+    # Setting page, limit and offset variables
+            per_page = 4
+            page = request.args.get(get_page_parameter(), type=int, default=1)
+            offset = (page - 1) * per_page
+
             connected_to_database == 1
-            # join car table with images on VIN number
+            # join car table with images on VIN number, get all
             cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day,"
-             " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN")
-            data = cursor.fetchall()
+            " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN")
+            total = cursor.fetchall()
+
+            
+            #query by limit and offset
+
+            cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day,"
+            " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN DESC LIMIT %s OFFSET %s" , (per_page, offset))
+            data  = cursor.fetchall()
+
             cursor.close()
             conn.close()
             connected_to_database == 0
 
+            pagination = Pagination(page=page, per_page=per_page, offset=offset, total=len(total), record_name='data', css_framework='bootstrap3')
 
             #getting colors for catagories
             conn = mysql.connect()
@@ -72,7 +109,7 @@ def index():
             cursor.execute("SELECT DISTINCT Color FROM car")
             colors = cursor.fetchall()
 
-            return render_template("index.html", data=data, colors=colors)
+            return render_template("index.html", data=data, colors=colors, pagination=pagination)
         except Exception as e:
             print("exception:", str(e))
             return render_template('index.html')
@@ -89,7 +126,13 @@ def index():
         #look for substrings in string
         substring = re.compile(f'.*{inquiry}', re.IGNORECASE)
         substring_matches = list(filter(substring.match, list_cars()))
-        print(cars_color)
+
+        # Setting page, limit and offset variables
+        per_page = 4
+        page = request.args.get(get_page_parameter(), type=int, default=1)
+        offset = (page - 1) * per_page
+
+
         #if user searches for something 
         if inquiry:
             #if word is exactly the same as given in the searchbox
@@ -114,11 +157,18 @@ def index():
                     if cars_color is None:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
                         JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN HAVING car.Make = %s", ( inquiry))
+
+
                     else:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
-                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make = %s", (cars_color, inquiry))
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make = %s ", (cars_color, inquiry))
+
+                    '''
+                        cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
+                        JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s GROUP BY car.VIN HAVING car.Make = %s DESC LIMIT %s OFFSET %s", (cars_color, inquiry, per_page, offset)) 
+                    '''
                     print(substring)
-                    data = cursor.fetchall()
+                    total = cursor.fetchall()
                     return render_template("index.html", data=data, colors=colors)
                 except Exception as e:
                     print("exception:", str(e))
@@ -217,64 +267,125 @@ def upload_image():
             print('not allowed')
             return redirect('/admin/cars')
 '''
+
+
 @app.route('/admin/', methods=['POST', 'GET'])
 def admin():
-    if request.method == "GET":
-        return render_template("admin.html")
+    return render_template("admin.html")
 
 @app.route('/admin/users', methods=['POST', 'GET'])
 def admin_users():
     if request.method == "GET":
         connected_to_database = 0
-        try:
+        if session.get('user'):
+            _user = session.get('user')
+            #make sure user logged in is admin
             conn = mysql.connect()
             cursor = conn.cursor()
-            connected_to_database == 1
-            cursor.execute("SELECT id, username FROM user")
+            cursor.execute("SELECT * FROM admin WHERE id = %s", _user)
             data = cursor.fetchall()
-            return render_template("admin_users.html", data=data)
-        except Exception as e:
-            print("exception:", str(e))
-            return render_template('admin_users.html')
-        finally:
-            if connected_to_database == 1:
-                cursor.close()
-                conn.close()
+            if len(data) > 0:
+                try:
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    cursor.execute("SELECT id, username FROM user")
+                    data = cursor.fetchall()
+                    return render_template("admin_users.html", data=data)
+                except Exception as e:
+                    print("exception:", str(e))
+                    return render_template('admin_users.html')
+                finally:
+                    if connected_to_database == 1:
+                        cursor.close()
+                        conn.close()
+            else:
+                flash("User not admin", "error")
+                return redirect('/')
+        else:
+            flash("Must login", "error")
+            return redirect('/')
+                
+
+
+@app.route('/remove/<vin>', methods=['POST'])
+def soft_remove_car(vin):
+    try:
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE car SET Deleted = 1 WHERE VIN = %s", (vin))
+        conn.commit()
+        return redirect('/admin/cars')
+    except Exception as e:
+        print("exception:", str(e))
+        return render_template('index.html')
+    finally:
+        cursor.close()
+        conn.close()
+
+
 
 @app.route('/admin/cars', methods=['POST', 'GET'])
 def admin_cars():
     if request.method == "GET":
-        connected_to_database = 0
-        print("cars", list_cars())
-        try:
+        if session.get('user'):
+            _user = session.get('user')
+            #make sure user logged in is admin
             conn = mysql.connect()
             cursor = conn.cursor()
-            connected_to_database == 1
-            # join car table with images on VIN number
-            cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day,"
-             " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN GROUP BY car.VIN")
+            cursor.execute("SELECT * FROM admin WHERE id = %s", _user)
             data = cursor.fetchall()
             cursor.close()
             conn.close()
-            connected_to_database == 0
+            if len(data) > 0:
+                connected_to_database = 0
+                print("cars", list_cars())
+                try:
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    
+                    # Setting page, limit and offset variables
+                    per_page = 4
+                    page = request.args.get(get_page_parameter(), type=int, default=1)
+                    offset = (page - 1) * per_page
 
+                    connected_to_database == 1
+                    # join car table with images on VIN number, get all
+                    cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day,"
+                    " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN WHERE car.Deleted = 0 GROUP BY car.VIN")
+                    total = cursor.fetchall()
 
-            #getting colors for catagories
-            conn = mysql.connect()
-            cursor = conn.cursor()
-            connected_to_database == 1
-            # join car table with images on VIN number
-            cursor.execute("SELECT Color FROM car")
-            colors = cursor.fetchall()
+                    
+                    #query by limit and offset
 
-            return render_template("admin_cars.html", data=data, colors=colors)
-        except Exception as e:
-            print("exception:", str(e))
-            return render_template('admin_cars.html')
-        finally:
-            if connected_to_database == 1:
-                cursor.close()
-                conn.close()
+                    cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day,"
+                    " image.image_number FROM car JOIN image ON image.CAR_VIN = car.VIN WHERE car.Deleted = 0 GROUP BY car.VIN DESC LIMIT %s OFFSET %s" , (per_page, offset))
+                    data  = cursor.fetchall()
+
+                    cursor.close()
+                    conn.close()
+                    connected_to_database == 0
+
+                    pagination = Pagination(page=page, per_page=per_page, offset=offset, total=len(total), record_name='data', css_framework='bootstrap3')
+
+                    #getting colors for catagories
+                    conn = mysql.connect()
+                    cursor = conn.cursor()
+                    connected_to_database == 1
+                    # join car table with images on VIN number
+                    cursor.execute("SELECT Color FROM car")
+                    colors = cursor.fetchall()
+
+                    return render_template("admin_cars.html", data=data, colors=colors, pagination=pagination)
+                except Exception as e:
+                    print("exception:", str(e))
+                    return render_template('admin_cars.html')
+                finally:
+                    if connected_to_database == 1:
+                        cursor.close()
+                        conn.close()
+        print("must login")
+        return redirect('/')
     
     else:
         connected_to_database = 0
@@ -623,6 +734,7 @@ def logout():
     return redirect('/')
 
 
+
 @app.route('/register', methods=['POST', 'GET'])
 def signUp():
     if request.method == "GET":
@@ -650,11 +762,12 @@ def signUp():
     if username:
         username_exists = cursor.execute("SELECT username FROM user WHERE username = %s", (username))
         if username_exists:
-            print('Username already exists')
-            return render_template("register.html")
-    cursor.execute("INSERT INTO user(username, hashed_password) VALUES (%s, %s)", (username, hash))
+            #return json.dumps({'message':'Username Unavilable!'})
+            return jsonify({'htmlresponse': 'Username Unavilable!'})
+            #return render_template("register.html")
+        cursor.execute("INSERT INTO user(username, hashed_password) VALUES (%s, %s)", (username, hash))
 
-    data = cursor.fetchall()
+        data = cursor.fetchall()
 
     if len(data) == 0:
         conn.commit()
@@ -717,6 +830,43 @@ def login():
         if connected_to_database == 1:
             cursor.close()
             conn.close()
+
+@app.route('/admin/login',methods=['POST', 'GET'])
+def admin_login():
+    if request.method == "GET":
+
+        return render_template("admin_login.html")
+    else:
+        connected_to_database = 0
+        try:
+            username = request.form['username']
+            password = request.form['password']
+            if not username:
+                print('Must Provide Username')
+                return render_template("admin_login.html")
+            elif not request.form.get("password"):
+                print('Must Provide Password')
+                return render_template("admin_login.html")
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            connected_to_database == 1
+            cursor.execute("SELECT * FROM admin WHERE username = %s", (username))
+            data = cursor.fetchall()
+            if len(data) > 0 and check_password_hash(data[0][2], password):
+                session['user'] = data[0][0]
+                print("User signed in! ")
+                return render_template('admin.html')
+            else:
+                print("Username or password are wrong")
+                return render_template('admin_login.html')
+        except Exception as e:
+            print("exception:", str(e))
+            return render_template('admin_login.html')
+        finally:
+            if connected_to_database == 1:
+                cursor.close()
+                conn.close()
+
 
 @app.route('/checkout',methods=['POST', 'GET'])
 def checkout():
@@ -1010,7 +1160,7 @@ def savedListDelete():
                 cursor.close()
                 conn.close()
     else:
-        return redirect("/login")
+        return redirect("/login")   
 
 
 if __name__ == "__main__":
