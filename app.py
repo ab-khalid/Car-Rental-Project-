@@ -1,11 +1,9 @@
 
-from flask import Flask, render_template, request, json, redirect, jsonify, send_from_directory, Blueprint
+from flask import Flask, render_template, request, json, redirect, jsonify, send_from_directory
 from flask_paginate import Pagination, get_page_parameter
-
 from flaskext.mysql import MySQL
 from flask import session, flash
 from werkzeug.security import check_password_hash, generate_password_hash
-from flask_cors import CORS
 import os
 from werkzeug.utils import secure_filename
 import re
