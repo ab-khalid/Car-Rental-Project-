@@ -30,15 +30,18 @@
         $(function () {
             $('form').on('submit', function (e) {
                 e.preventDefault()
+                //check empty username
+                if ($('#username').val().length == 0) {
+                    $('#success').html("<div class='alert alert-danger'><strong>Username required. </strong></div>");
+                }
                 //validate password and confirm pasword
-                if ($('#password').val().length < 6) {
-
+                else if ($('#password').val().length < 6) {
                     $('#success').html("<div class='alert alert-danger'><strong>Password too short, must be at least 6 characters. </strong></div>");
                 }
                 else if ((/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{6,}$/.test($('#password').val())) == false) {
                     $('#success').html("<div class='alert alert-danger'><strong>Password must contain a lowercase letter, uppercase letter, and digit. </strong></div>");
                 }
-                else if  ($('#password').val() != $('#confirmation').val()){
+                else if ($('#password').val() != $('#confirmation').val()) {
                     $('#success').html("<div class='alert alert-danger'><strong>Password and confirm password must match. </strong></div>");
                 }
                 else { //fields are validated, check if username is available.
