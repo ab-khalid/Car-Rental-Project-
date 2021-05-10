@@ -155,7 +155,7 @@ def index():
                         #selectig all from database
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
                         JOIN image ON image.CAR_VIN = car.VIN WHERE car.deleted = 0 GROUP BY car.VIN HAVING car.Make = %s", ( inquiry))
-
+                        total = cursor.fetchall()
                         
                         #apply pagination 
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
@@ -165,8 +165,8 @@ def index():
                     else:
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
                         JOIN image ON image.CAR_VIN = car.VIN WHERE car.Color = %s AND car.deleted = 0 GROUP BY car.VIN HAVING car.Make = %s ", (cars_color, inquiry))
+                        total = cursor.fetchall()
 
-                        
 
                         #apply pagination 
                         cursor.execute("SELECT car.VIN, car.Make, car.Model, car.Color, car.Year, car.Seats, car.Price_Per_Day, image.image_number FROM car \
