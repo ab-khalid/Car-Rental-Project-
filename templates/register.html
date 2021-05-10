@@ -27,11 +27,10 @@
 
 
     <script>
-        //check if username is available
         $(function () {
             $('form').on('submit', function (e) {
                 e.preventDefault()
-                
+                //validate password and confirm pasword
                 if ($('#password').val().length < 6) {
 
                     $('#success').html("<div class='alert alert-danger'><strong>Password too short, must be at least 6 characters. </strong></div>");
